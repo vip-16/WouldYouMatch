@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /privacy-policy
+Allow: /terms
+Allow: /terms-and-conditions
+Disallow: /api/
+Disallow: /ws
+
+Sitemap: https://wouldyoumatch.app/sitemap.xml

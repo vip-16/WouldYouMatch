@@ -1,0 +1,39 @@
+# Environments & Secrets
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+!.env.example.env
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Build outputs
+dist/
+build/
+.vite/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+*.mp4
+PROJECT_TRANSCRIPT.md

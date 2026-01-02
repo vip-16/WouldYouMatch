@@ -1,0 +1,579 @@
+[
+  {
+    "left": "Bark like a dog every time you sneeze",
+    "right": "Meow softly every time you finish a sentence",
+    "category": "Absurd",
+    "tags": [
+      "silly",
+      "animals",
+      "funny"
+    ],
+    "hash": "1b41714e634270018be4efec551ebdd542e91b101b1c4254b20bb5b0200eb8e5",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 100,
+    "votes_down": 10,
+    "id": "ai_wyr_0001"
+  },
+  {
+    "left": "Have a dramatic brass band follow your mistakes",
+    "right": "Have a laugh track play during serious conversations",
+    "category": "Absurd",
+    "tags": [
+      "awkward",
+      "funny",
+      "music"
+    ],
+    "hash": "000ea3ce734bd43aee5f1ceaa8fabffeff380d591103e836adb5f678e6881bf3",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 117,
+    "votes_down": 17,
+    "id": "ai_wyr_0002"
+  },
+  {
+    "left": "Burp the national anthem whenever you meet someone",
+    "right": "Fart loud trumpet sounds every time you sit",
+    "category": "Embarrassing",
+    "tags": [
+      "gross",
+      "awkward",
+      "bodily functions"
+    ],
+    "hash": "0b402caabfa6e7416950abfd55eb96bb0e1b4729b3935056dba4ab5173ac706b",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 134,
+    "votes_down": 24,
+    "id": "ai_wyr_0003"
+  },
+  {
+    "left": "Shout your thoughts out loud every ten minutes",
+    "right": "Narrate your bathroom trips in a radio voice",
+    "category": "Embarrassing",
+    "tags": [
+      "social",
+      "awkward",
+      "hilarious"
+    ],
+    "hash": "b02f16f451adf3d7c57212ecc5f943023e0074a51f3618beeb85f5cce855a1be",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 151,
+    "votes_down": 31,
+    "id": "ai_wyr_0004"
+  },
+  {
+    "left": "Wear a soggy wet suit to every wedding",
+    "right": "Wear a giant hotdog costume to job interviews",
+    "category": "Silly",
+    "tags": [
+      "fashion",
+      "awkward",
+      "events"
+    ],
+    "hash": "fb6f273020b8ee35f5043fe6f5b14def7bcd0390109d6d134a005aeca57c8440",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 168,
+    "votes_down": 38,
+    "id": "ai_wyr_0005"
+  },
+  {
+    "left": "Have wet confetti shoot from ears when happy",
+    "right": "Have glitter constantly leak from your pockets forever",
+    "category": "Absurd",
+    "tags": [
+      "weird",
+      "body",
+      "funny"
+    ],
+    "hash": "947466f90fe08d1a01af66f72fdac54c25adf44687a168321a60cce085ac9e1b",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 185,
+    "votes_down": 45,
+    "id": "ai_wyr_0006"
+  },
+  {
+    "left": "High-five everyone you see on the street daily",
+    "right": "Wink intensely at strangers whenever you pay daily",
+    "category": "Embarrassing",
+    "tags": [
+      "social",
+      "strangers",
+      "cringe"
+    ],
+    "hash": "b97d35d2c627d05019a7fe77bd49e3e20149d6d718afc724e2df93287ea06b6b",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 202,
+    "votes_down": 52,
+    "id": "ai_wyr_0007"
+  },
+  {
+    "left": "Always smell strongly like old movie theater butter",
+    "right": "Always taste like stale cold pepperoni pizza",
+    "category": "Gross",
+    "tags": [
+      "food",
+      "smell",
+      "weird"
+    ],
+    "hash": "a32ace88abdf45a4e012f1cc02a31332cb94261ea19b8208986d2b6362037067",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 219,
+    "votes_down": 14,
+    "id": "ai_wyr_0008"
+  },
+  {
+    "left": "Moonwalk everywhere instead of walking normally",
+    "right": "Aggressively jazz hand whenever you make eye contact",
+    "category": "Silly",
+    "tags": [
+      "dancing",
+      "social",
+      "funny"
+    ],
+    "hash": "2a918e2fcb08957d63ee2fbad75329ac8d4edaf2acba884dc17c387ee7fa0488",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 236,
+    "votes_down": 21,
+    "id": "ai_wyr_0009"
+  },
+  {
+    "left": "Have your search history printed on your shirt",
+    "right": "Have your inner monologue broadcasted on local radio",
+    "category": "Embarrassing",
+    "tags": [
+      "secrets",
+      "tech",
+      "cringe"
+    ],
+    "hash": "f2b9c00e40783ac6540fc68d17f79623345175c2aba75b9d19b7ad9c80fac5bc",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 253,
+    "votes_down": 28,
+    "id": "ai_wyr_0010"
+  },
+  {
+    "left": "Sweat cold gravy whenever you get excited",
+    "right": "Cry warm melted cheese when you get sad",
+    "category": "Gross",
+    "tags": [
+      "food",
+      "bodily functions",
+      "weird"
+    ],
+    "hash": "3e109faad9dcfb90b035bd86ffa054a27b47ce4ea5f9eaaa3ec5f2dd9dfb8d56",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 270,
+    "votes_down": 35,
+    "id": "ai_wyr_0011"
+  },
+  {
+    "left": "Accidentally call your boss 'Mommy' every time",
+    "right": "Accidentally sign off work emails with 'Love you'",
+    "category": "Embarrassing",
+    "tags": [
+      "work",
+      "cringe",
+      "awkward"
+    ],
+    "hash": "a6496e487ff04f4fed60c5a7c91b42b1f0e2c1224f04af4fb16b2589c1549580",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 287,
+    "votes_down": 42,
+    "id": "ai_wyr_0012"
+  },
+  {
+    "left": "Experience absolute truth at cost of sanity",
+    "right": "Live a comforting lie with complete happiness",
+    "category": "Philosophy",
+    "tags": [
+      "truth",
+      "mind",
+      "existential"
+    ],
+    "hash": "442252fd3cccadaaa574b79a5d17de99763cb5de8fc2f4db43fa589eff9c3023",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 304,
+    "votes_down": 49,
+    "id": "ai_wyr_0013"
+  },
+  {
+    "left": "Be reborn in a perfect digital utopia",
+    "right": "Remain in a decaying, authentic physical world",
+    "category": "Technology",
+    "tags": [
+      "future",
+      "reality",
+      "existential"
+    ],
+    "hash": "eccec2d53bf326cfa48cdf72b6fc181ccc6ae266271d28f64e4ea73df21be9b0",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 321,
+    "votes_down": 11,
+    "id": "ai_wyr_0014"
+  },
+  {
+    "left": "Save humanity but be remembered as a monster",
+    "right": "Doom humanity but be revered as a saint",
+    "category": "Morality",
+    "tags": [
+      "ethics",
+      "legacy",
+      "humanity"
+    ],
+    "hash": "f10ba2035867f20361d792cbd41de30facd6d8a935b90e9c6c8fe301fd62f135",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 338,
+    "votes_down": 18,
+    "id": "ai_wyr_0015"
+  },
+  {
+    "left": "Relive your past knowing you cannot change anything",
+    "right": "See your future knowing you cannot prevent it",
+    "category": "Time",
+    "tags": [
+      "destiny",
+      "time travel",
+      "fate"
+    ],
+    "hash": "394e1c86b3fc4ca5551f4bb205951e51c1a3b7aa60f5e35f67f077f117aa7cf9",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 355,
+    "votes_down": 25,
+    "id": "ai_wyr_0016"
+  },
+  {
+    "left": "Feel everyone's pain as if it were yours",
+    "right": "Feel no emotion for the rest of life",
+    "category": "Humanity",
+    "tags": [
+      "empathy",
+      "emotion",
+      "suffering"
+    ],
+    "hash": "1439d4ecb6b42b8f17ffe6e3f9ef36101afa7586fbdf18c69fc8c38b9c086b78",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 372,
+    "votes_down": 32,
+    "id": "ai_wyr_0017"
+  },
+  {
+    "left": "Create a masterpiece you can never share",
+    "right": "Create mediocre art celebrated by millions",
+    "category": "Art & Legacy",
+    "tags": [
+      "art",
+      "legacy",
+      "purpose"
+    ],
+    "hash": "3f6586eafe36b43eb6ab330ae2d35e7ccaec68423d12eadcbbaf4d6ee962c232",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 389,
+    "votes_down": 39,
+    "id": "ai_wyr_0018"
+  },
+  {
+    "left": "Know when the universe will end precisely",
+    "right": "Know how the universe was created originally",
+    "category": "Cosmos",
+    "tags": [
+      "universe",
+      "knowledge",
+      "existence"
+    ],
+    "hash": "0bd8b40544910dc3141222cf4163613ea5ba17a147857c4b68fc9c2e6ef2edca",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 406,
+    "votes_down": 46,
+    "id": "ai_wyr_0019"
+  },
+  {
+    "left": "Erase your worst mistake from history entirely",
+    "right": "Gain full foresight of your next big mistake",
+    "category": "Regret",
+    "tags": [
+      "mistakes",
+      "choice",
+      "destiny"
+    ],
+    "hash": "c74eb070dc5ea386c477e0c62f2337e20f1049eeccfee4082658dd5659826f35",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 423,
+    "votes_down": 53,
+    "id": "ai_wyr_0020"
+  },
+  {
+    "left": "Live forever alone as an immortal entity",
+    "right": "Die tomorrow surrounded by everyone you love",
+    "category": "Life & Death",
+    "tags": [
+      "immortality",
+      "love",
+      "mortality"
+    ],
+    "hash": "097360184ba9bf1ced3a030fa6b0d2ca7e4234bfdaec2564f9ce22481d1b3244",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 440,
+    "votes_down": 15,
+    "id": "ai_wyr_0021"
+  },
+  {
+    "left": "Possess infinite knowledge without any creative power",
+    "right": "Possess infinite creativity without any actual knowledge",
+    "category": "Mind",
+    "tags": [
+      "wisdom",
+      "creativity",
+      "intellect"
+    ],
+    "hash": "666b9da7a5d1fa5627bac603b1871ac4f30049dad8644673cd2e77667428c56c",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 107,
+    "votes_down": 22,
+    "id": "ai_wyr_0022"
+  },
+  {
+    "left": "Be able to read minds but never speak",
+    "right": "Be able to speak truth but never listen",
+    "category": "Connection",
+    "tags": [
+      "communication",
+      "truth",
+      "isolation"
+    ],
+    "hash": "0380f928b0109cd5d771b2726e6e791bf833d3f20e58ab254ba3b6da250916cb",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 124,
+    "votes_down": 29,
+    "id": "ai_wyr_0023"
+  },
+  {
+    "left": "Sacrifice your soul to eliminate all global suffering",
+    "right": "Keep your soul while humanity continues to suffer",
+    "category": "Morality",
+    "tags": [
+      "sacrifice",
+      "ethics",
+      "humanity"
+    ],
+    "hash": "297c610e24aa9e9f625a9c262a3f0772cd1eebf0b1e3c7f35bb1065e105955de",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 141,
+    "votes_down": 36,
+    "id": "ai_wyr_0024"
+  },
+  {
+    "left": "Read minds, but only when people dislike you",
+    "right": "See the future, but forget it immediately after",
+    "category": "Superpowers",
+    "tags": [
+      "superpowers",
+      "mind reading",
+      "future"
+    ],
+    "hash": "c8f6b95093dc7f50d2b4d7b39b10b40131b873d1ecd2fccea3e3b1e9b137c359",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 158,
+    "votes_down": 43,
+    "id": "ai_wyr_0025"
+  },
+  {
+    "left": "Pause time, but age twice as fast paused",
+    "right": "Rewind time five minutes, but lose a memory",
+    "category": "Superpowers",
+    "tags": [
+      "superpowers",
+      "time travel",
+      "magic"
+    ],
+    "hash": "e4647fecb1ef42c30cfb49c79d6d88a9ad4b085dd7eeeaf25b100f608181b0e3",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 175,
+    "votes_down": 50,
+    "id": "ai_wyr_0026"
+  },
+  {
+    "left": "Teleport anywhere, but arrive completely naked every time",
+    "right": "Fly anywhere, but only three feet above ground",
+    "category": "Superpowers",
+    "tags": [
+      "superpowers",
+      "teleportation",
+      "flight"
+    ],
+    "hash": "9e1e323de8c336119a1a228f4968e0d4d5db4b178103cc380a9b12d9b2ef7561",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 192,
+    "votes_down": 12,
+    "id": "ai_wyr_0027"
+  },
+  {
+    "left": "Instantly master any language you hear once",
+    "right": "Instantly master any instrument you touch once",
+    "category": "Superpowers",
+    "tags": [
+      "superpowers",
+      "skills",
+      "talent"
+    ],
+    "hash": "246b4f1ae1b7f6e348d69afdeeda809e2850f7698594456bd94880a90dde07d5",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 209,
+    "votes_down": 19,
+    "id": "ai_wyr_0028"
+  },
+  {
+    "left": "Have unlimited free Uber rides for life",
+    "right": "Have unlimited free First Class flights forever",
+    "category": "Modern Lifestyle",
+    "tags": [
+      "lifestyle",
+      "travel",
+      "perks"
+    ],
+    "hash": "19d5500d8c28755df220763d9f8dfc06f5e20af0c6b7f344db51d8baa130585a",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 226,
+    "votes_down": 26,
+    "id": "ai_wyr_0029",
+    "daily_date": "2026-08-19"
+  },
+  {
+    "left": "Never feel tired, but lose ability to dream",
+    "right": "Never gain weight, but eat only plain rice",
+    "category": "Modern Lifestyle",
+    "tags": [
+      "lifestyle",
+      "health",
+      "body"
+    ],
+    "hash": "dbb07b9a7ac0d65034b3e9ef40606f1909f1414d4321c05d4ee7fe1ab6628acd",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 243,
+    "votes_down": 33,
+    "id": "ai_wyr_0030"
+  },
+  {
+    "left": "Work your dream job for minimum wage forever",
+    "right": "Work a boring job for a million yearly",
+    "category": "Modern Lifestyle",
+    "tags": [
+      "career",
+      "lifestyle",
+      "money"
+    ],
+    "hash": "70c959a0d070ff0f683180e42f92371ac1a57b48a2e4ceebf12f4cd0e13d543e",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 260,
+    "votes_down": 40,
+    "id": "ai_wyr_0031"
+  },
+  {
+    "left": "Have 10 million followers, but no real friends",
+    "right": "Have 3 best friends, but zero social media",
+    "category": "Modern Lifestyle",
+    "tags": [
+      "lifestyle",
+      "social media",
+      "friendship"
+    ],
+    "hash": "5d5ce33899edb87a99a981165073e24c897415aaf8a050c1ace1d3c8a23f73f8",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 277,
+    "votes_down": 47,
+    "id": "ai_wyr_0032"
+  },
+  {
+    "left": "Date a 10 who hates your favorite hobbies",
+    "right": "Date a 6 who loves everything you do",
+    "category": "Dating",
+    "tags": [
+      "dating",
+      "relationships",
+      "looks"
+    ],
+    "hash": "50e42dea90099239b4a495616a32692469789e49a23dd35727536a423c3324f0",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 294,
+    "votes_down": 54,
+    "id": "ai_wyr_0033"
+  },
+  {
+    "left": "Know your partner's search history at all times",
+    "right": "Let your partner read all your private texts",
+    "category": "Dating",
+    "tags": [
+      "dating",
+      "privacy",
+      "trust"
+    ],
+    "hash": "4775b09aad77ea7390dee4e0c899f24f12f8ffdad5b6567df333499787a129b6",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 311,
+    "votes_down": 16,
+    "id": "ai_wyr_0034"
+  },
+  {
+    "left": "Marry your crush, but live in total poverty",
+    "right": "Marry a stranger, but live in total luxury",
+    "category": "Dating",
+    "tags": [
+      "dating",
+      "money",
+      "love"
+    ],
+    "hash": "10424bfc1e96c3719dd5656eb877e6818800b9c882f66224508d919b98f59842",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 328,
+    "votes_down": 23,
+    "id": "ai_wyr_0035"
+  },
+  {
+    "left": "Have a partner who speaks every inner thought",
+    "right": "Have a partner who never talks about feelings",
+    "category": "Dating",
+    "tags": [
+      "dating",
+      "communication",
+      "relationships"
+    ],
+    "hash": "5d03fde57660961885b7c1b8686d87552c4c48567310510631184277140ac035",
+    "source": "ai_gemini",
+    "active": true,
+    "votes_up": 345,
+    "votes_down": 30,
+    "id": "ai_wyr_0036"
+  }
+]
