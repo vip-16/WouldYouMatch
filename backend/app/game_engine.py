@@ -430,7 +430,22 @@ class WouldYouMatchEngine:
 
     def enqueue_player(self, user_id: str) -> Optional[MatchState]:
         p = self.users.get(user_id)
+        if not p or not p.connected or p.websocket is None:
+            print(f"[Matchmaking] Ignored queue join for disconnected user {user_id}")
+            self.dequeue_player(user_id)
+            return None
+
         target_queue = self.shadow_queue if (p and p.shadowbanned) else self.queue
+
+        # Remove stale entries before trying to pair. A queue entry is useful
+        # only while its WebSocket is still live.
+        target_queue[:] = [
+            queued_id
+            for queued_id in target_queue
+            if (queued := self.users.get(queued_id))
+            and queued.connected
+            and queued.websocket is not None
+        ]
 
         if user_id not in target_queue:
             target_queue.append(user_id)
@@ -443,7 +458,7 @@ class WouldYouMatchEngine:
             p1_player = self.users.get(p1_id)
             for cand_id in target_queue[1:]:
                 p2_cand = self.users.get(cand_id)
-                if p1_player and p2_cand:
+                if p1_id != cand_id and p1_player and p2_cand:
                     # Check mutual block
                     if cand_id not in p1_player.blocked_users and p1_id not in p2_cand.blocked_users:
                         p2_id = cand_id

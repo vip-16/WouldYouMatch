@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Navbar } from './components/Navbar';
 import { LandingScreen } from './components/LandingScreen';
 import { QueueScreen } from './components/QueueScreen';
@@ -69,6 +69,25 @@ export const App: React.FC = () => {
   const [showTerms, setShowTerms] = useState<boolean>(false);
   const [showCookieSettings, setShowCookieSettings] = useState<boolean>(false);
   const [is404, setIs404] = useState<boolean>(false);
+
+  // WebSocket callbacks are intentionally stable. Keep the values they need
+  // in refs so a frame can never observe an old match or round after React
+  // re-renders.
+  const userRef = useRef<User | null>(null);
+  const matchIdRef = useRef<string | null>(null);
+  const currentRoundRef = useRef<number>(1);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  useEffect(() => {
+    matchIdRef.current = matchId;
+  }, [matchId]);
+
+  useEffect(() => {
+    currentRoundRef.current = currentRound;
+  }, [currentRound]);
 
   // Dark Mode toggle
   const toggleDarkMode = () => {
@@ -151,15 +170,22 @@ export const App: React.FC = () => {
   }, []);
 
   const fetchInitialUser = async () => {
-    const savedUserId = localStorage.getItem('wouldyoumatch_user_id') || localStorage.getItem('wyrmg_user_id');
+    // Guests are per-tab. localStorage is shared by every tab on a device,
+    // which previously made two guest tabs impersonate the same player.
+    const sessionGuestId = sessionStorage.getItem('wyrmg_guest_user_id');
+    const savedUserId = sessionGuestId || localStorage.getItem('wouldyoumatch_user_id') || localStorage.getItem('wyrmg_user_id');
     if (savedUserId) {
       try {
         const res = await fetch(`${API_BASE}/api/me?user_id=${savedUserId}`);
         if (res.ok) {
           const data = await res.json();
-          setUser(data);
-          setUnreadDMCount(data.total_unread_messages || 0);
-          return;
+          // A legacy localStorage guest must not be reused in a newly opened
+          // tab. Registered identities remain persistent across tabs.
+          if (!data.is_guest || sessionGuestId) {
+            setUser(data);
+            setUnreadDMCount(data.total_unread_messages || 0);
+            return;
+          }
         }
       } catch (e) {
         console.warn('Could not restore saved session, creating fresh:', e);
@@ -175,8 +201,7 @@ export const App: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
-        localStorage.setItem('wouldyoumatch_user_id', data.user.id);
-        localStorage.setItem('wyrmg_user_id', data.user.id);
+        sessionStorage.setItem('wyrmg_guest_user_id', data.user.id);
         refreshUserProfile(data.user.id);
       } else {
         createLocalUser();
@@ -205,6 +230,7 @@ export const App: React.FC = () => {
     const nouns = ['Pickle', 'Vortex', 'Wanderer', 'Otter', 'Panda'];
     const alias = `${adjectives[Math.floor(Math.random() * adjectives.length)]}${nouns[Math.floor(Math.random() * nouns.length)]}${Math.floor(Math.random() * 90 + 10)}`;
     setUser({ id: localId, alias, avatar_seed: `seed_${localId}`, role: 'user', is_guest: true });
+    sessionStorage.setItem('wyrmg_guest_user_id', localId);
   };
 
   const handleLogout = async () => {
@@ -212,6 +238,7 @@ export const App: React.FC = () => {
     localStorage.removeItem('wyrmg_auth_token');
     localStorage.removeItem('wouldyoumatch_user_id');
     localStorage.removeItem('wyrmg_user_id');
+    sessionStorage.removeItem('wyrmg_guest_user_id');
     setShowYouSpace(false);
     try {
       const res = await fetch(`${API_BASE}/api/auth/guest`, {
@@ -222,7 +249,7 @@ export const App: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
-        localStorage.setItem('wouldyoumatch_user_id', data.user.id);
+        sessionStorage.setItem('wyrmg_guest_user_id', data.user.id);
         refreshUserProfile(data.user.id);
       } else {
         createLocalUser();
@@ -232,43 +259,46 @@ export const App: React.FC = () => {
     }
   };
 
-  const connectWebSocket = useCallback(async () => {
-    if (!user) return;
+  const getWsTicket = useCallback(async (): Promise<string> => {
+    const activeUser = userRef.current;
+    if (!activeUser) throw new Error('No active user');
+    const res = await fetch(`${API_BASE}/api/ws/ticket`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: activeUser.id }),
+    });
+    if (!res.ok) throw new Error('Unable to get WebSocket ticket');
+    return (await res.json()).ticket;
+  }, []);
+
+  const connectWebSocket = useCallback(async (): Promise<boolean> => {
+    if (!userRef.current) return false;
+    if (wsClient.isConnected()) {
+      setConnectionStatus('connected');
+      return true;
+    }
     setConnectionStatus('connecting');
     try {
-      const res = await fetch(`${API_BASE}/api/ws/ticket`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id }),
+      const ticket = await getWsTicket();
+      await wsClient.connect(ticket, {
+        onOpen: () => setConnectionStatus('connected'),
+        onClose: () => setConnectionStatus('disconnected'),
+        getReconnectTicket: getWsTicket,
       });
-      if (res.ok) {
-        const data = await res.json();
-        wsClient.connect(
-          data.ticket,
-          () => setConnectionStatus('connected'),
-          () => setConnectionStatus('disconnected')
-        );
-      } else {
-        setConnectionStatus('disconnected');
-      }
+      return true;
     } catch (e) {
       console.warn('WS Ticket fetch error:', e);
       setConnectionStatus('disconnected');
+      return false;
     }
-  }, [user]);
+  }, [getWsTicket]);
 
-  useEffect(() => {
-    const unsubscribe = wsClient.subscribe((frame: WSFrame) => {
-      handleServerFrame(frame);
-    });
-    return () => unsubscribe();
-  }, [user, matchId, currentRound]);
-
-  const handleServerFrame = (frame: WSFrame) => {
+  const handleServerFrame = useCallback((frame: WSFrame) => {
     const { type, payload } = frame;
 
     if (type === 'queue.matched') {
       sounds.playMatchFound();
+      matchIdRef.current = payload.match_id;
       setMatchId(payload.match_id);
       setShareHash(payload.share_hash || payload.match_id);
       setOpponent(payload.opponent);
@@ -279,6 +309,7 @@ export const App: React.FC = () => {
       setRematchState('none');
       setStage('game');
     } else if (type === 'round.start') {
+      currentRoundRef.current = payload.round;
       setCurrentRound(payload.round);
       setQuestion(payload.question);
       setOpponentAnswered(false);
@@ -297,7 +328,7 @@ export const App: React.FC = () => {
       }
     } else if (type === 'message.receive') {
       setMessages((prev) => [...prev, payload]);
-      if (payload.sender_id !== user?.id && payload.sender_id !== 'system') {
+      if (payload.sender_id !== userRef.current?.id && payload.sender_id !== 'system') {
         sounds.playMessageReceived();
       }
     } else if (type === 'reaction.update') {
@@ -321,7 +352,7 @@ export const App: React.FC = () => {
       sounds.playMessageReceived();
     } else if (type === 'friend.request' || type === 'friend.mutual') {
       sounds.playNotification();
-      if (user) refreshUserProfile(user.id);
+      if (userRef.current) refreshUserProfile(userRef.current.id);
     } else if (type === 'duel.challenge') {
       sounds.playNotification();
       setIncomingChallenge({
@@ -333,7 +364,11 @@ export const App: React.FC = () => {
       setChallengeNotice(`${payload.declined_by_alias || 'Friend'} declined the duel.`);
       setTimeout(() => setChallengeNotice(null), 4000);
     }
-  };
+  }, []);
+
+  // Subscribe once for the life of the app. A stable callback plus refs means
+  // no event can be dropped while React tears down a round-dependent listener.
+  useEffect(() => wsClient.subscribe(handleServerFrame), [handleServerFrame]);
 
   const handleChallengeFriend = async (friendId?: string, friendAlias?: string, isOnline?: boolean) => {
     if (!friendId) {
@@ -404,10 +439,12 @@ export const App: React.FC = () => {
 
   const handleFindMatch = async () => {
     setStage('queue');
-    await connectWebSocket();
-    setTimeout(() => {
-      wsClient.send('queue.join', { mode: 'quick' });
-    }, 400);
+    const connected = await connectWebSocket();
+    if (!connected) {
+      setStage('landing');
+      return;
+    }
+    wsClient.send('queue.join', { mode: 'quick' });
   };
 
   const handleCancelQueue = () => {
@@ -416,10 +453,11 @@ export const App: React.FC = () => {
   };
 
   const handleSubmitAnswer = (choice: 'left' | 'right') => {
-    if (!matchId) return;
+    const activeMatchId = matchIdRef.current;
+    if (!activeMatchId) return;
     wsClient.send('round.answer', {
-      match_id: matchId,
-      round: currentRound,
+      match_id: activeMatchId,
+      round: currentRoundRef.current,
       choice,
       idempotency_key: `ans_${Date.now()}`,
     });
@@ -479,10 +517,12 @@ export const App: React.FC = () => {
   };
 
   const handleLeaveMatch = () => {
-    if (matchId) {
-      wsClient.send('chat.leave', { match_id: matchId });
+    const activeMatchId = matchIdRef.current;
+    if (activeMatchId) {
+      wsClient.send('chat.leave', { match_id: activeMatchId });
     }
     setStage('landing');
+    matchIdRef.current = null;
     setMatchId(null);
     setOpponent(null);
   };
@@ -595,6 +635,7 @@ export const App: React.FC = () => {
           
           {stage === 'game' && question && (
             <GameScreen
+              key={`${matchId ?? 'match'}-${currentRound}-${question.id}`}
               currentRound={currentRound}
               totalRounds={totalRounds}
               question={question}
@@ -695,6 +736,7 @@ export const App: React.FC = () => {
           onClose={() => setShowUpgradeModal(false)}
           onSuccess={(updatedUser) => {
             setUser(updatedUser);
+            sessionStorage.removeItem('wyrmg_guest_user_id');
             localStorage.setItem('wouldyoumatch_user_id', updatedUser.id);
             localStorage.setItem('wyrmg_user_id', updatedUser.id);
             if (updatedUser.id) refreshUserProfile(updatedUser.id);

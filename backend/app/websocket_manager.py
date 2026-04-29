@@ -5,9 +5,12 @@ Handles real-time multiplexed WebSocket events strictly adhering to the technica
 import json
 import asyncio
 import time
+import logging
 from typing import Dict, Any, Optional
 from fastapi import WebSocket, WebSocketDisconnect
 from app.game_engine import engine, MatchState
+
+logger = logging.getLogger(__name__)
 
 class ConnectionManager:
     def __init__(self):
@@ -16,14 +19,26 @@ class ConnectionManager:
 
     async def connect(self, user_id: str, websocket: WebSocket):
         await websocket.accept()
+        previous = self.active_connections.get(user_id)
+        if previous is not None and previous is not websocket:
+            logger.info("Replacing existing WebSocket connection for user %s", user_id)
+            try:
+                await previous.close(code=4001, reason="Superseded by a newer connection")
+            except Exception:
+                logger.debug("Previous WebSocket for %s was already closed", user_id)
         self.active_connections[user_id] = websocket
         if user_id in engine.users:
             engine.users[user_id].websocket = websocket
             engine.users[user_id].connected = True
         self.user_seq[user_id] = 0
 
-    def disconnect(self, user_id: str):
-        if user_id in self.active_connections:
+    def disconnect(self, user_id: str, websocket: Optional[WebSocket] = None):
+        current = self.active_connections.get(user_id)
+        # A replaced socket can finish its receive loop later. It must not
+        # clear the newer socket or mark the user offline.
+        if websocket is not None and current is not websocket:
+            return
+        if current is not None:
             del self.active_connections[user_id]
         if user_id in engine.users:
             engine.users[user_id].connected = False
@@ -42,7 +57,7 @@ class ConnectionManager:
             try:
                 await ws.send_text(json.dumps(frame))
             except Exception:
-                self.disconnect(user_id)
+                self.disconnect(user_id, ws)
 
     async def broadcast_to_match(self, match: MatchState, event_type: str, payload_func):
         for uid in match.players.keys():
@@ -96,13 +111,17 @@ async def handle_websocket_message(user_id: str, data_str: str):
 
     # Queue Join
     if event_type == "queue.join":
+        logger.info("Queue join requested by user %s", user_id)
         match = engine.enqueue_player(user_id)
         if match:
+            logger.info("Match %s created for users %s", match.match_id, list(match.players.keys()))
             await launch_match(match)
         else:
+            logger.info("User %s is waiting for a match", user_id)
             await ws_manager.send_event(user_id, "queue.waiting", {"status": "searching"})
 
     elif event_type == "queue.leave":
+        logger.info("Queue leave requested by user %s", user_id)
         engine.dequeue_player(user_id)
         await ws_manager.send_event(user_id, "queue.left", {})
 

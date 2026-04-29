@@ -439,10 +439,10 @@ async def websocket_endpoint(websocket: WebSocket, ticket: str = Query(...)):
             data_str = await websocket.receive_text()
             await handle_websocket_message(user_id, data_str)
     except WebSocketDisconnect:
-        ws_manager.disconnect(user_id)
+        ws_manager.disconnect(user_id, websocket)
     except Exception as e:
         print(f"WS Error for {user_id}: {e}")
-        ws_manager.disconnect(user_id)
+        ws_manager.disconnect(user_id, websocket)
 
 # ── Daily Vibe Question ──
 @app.get("/api/daily")

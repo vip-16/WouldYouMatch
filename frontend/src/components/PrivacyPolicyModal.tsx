@@ -66,10 +66,10 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ onClose,
           4. Local Storage & Cookies
         </h2>
         <p className="text-on-surface-variant">
-          We use browser <code className="font-mono text-xs bg-surface-container px-1 py-0.5 rounded">localStorage</code> strictly for functional purposes:
+          We use browser <code className="font-mono text-xs bg-surface-container px-1 py-0.5 rounded">sessionStorage</code> and <code className="font-mono text-xs bg-surface-container px-1 py-0.5 rounded">localStorage</code> strictly for functional purposes:
         </p>
         <ul className="list-disc pl-5 flex flex-col gap-1 text-on-surface-variant text-xs font-mono">
-          <li><strong>wouldyoumatch_user_id:</strong> Restores your guest session between visits.</li>
+          <li><strong>wyrmg_guest_user_id:</strong> Keeps a guest identity scoped to the current browser tab.</li>
           <li><strong>wouldyoumatch_auth_token:</strong> Keeps your registered account logged in.</li>
           <li><strong>wouldyoumatch_theme:</strong> Remembers your dark or light mode preference.</li>
           <li><strong>wouldyoumatch_cookie_consent:</strong> Stores your cookie/storage consent preferences.</li>
