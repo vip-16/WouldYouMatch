@@ -80,7 +80,31 @@ def init_db():
                 updated_at REAL NOT NULL
             );
         """)
-        
+
+        # 4. DM Conversations Table (persistent 1:1 messaging)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS conversations (
+                id TEXT PRIMARY KEY,
+                participants_json TEXT NOT NULL,
+                messages_json TEXT NOT NULL,
+                unread_json TEXT NOT NULL,
+                updated_at REAL NOT NULL
+            );
+        """)
+
+        # 5. Moderation Reports Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS reports (
+                id TEXT PRIMARY KEY,
+                reporter_id TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                room_id TEXT NOT NULL,
+                reason TEXT NOT NULL,
+                chat_log_json TEXT NOT NULL,
+                created_at REAL NOT NULL
+            );
+        """)
+
         conn.commit()
 
 # Initialize tables immediately on module import
@@ -236,11 +260,11 @@ def db_save_match_item(user_id: str, match_id: str, opponent_id: str, data: Dict
         conn.commit()
 
 def db_load_all_user_history() -> Dict[str, List[Dict[str, Any]]]:
-    """Loads all user match histories grouped by user_id."""
+    """Loads all user match histories grouped by user_id (newest first)."""
     history_map: Dict[str, List[Dict[str, Any]]] = {}
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT user_id, data_json FROM match_history ORDER BY id ASC;")
+        cursor.execute("SELECT user_id, data_json FROM match_history ORDER BY id DESC;")
         for row in cursor.fetchall():
             uid = row["user_id"]
             try:
@@ -249,6 +273,85 @@ def db_load_all_user_history() -> Dict[str, List[Dict[str, Any]]]:
             except Exception:
                 continue
     return history_map
+
+
+def db_save_conversation(conv: Dict[str, Any]):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO conversations (id, participants_json, messages_json, unread_json, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                participants_json = excluded.participants_json,
+                messages_json = excluded.messages_json,
+                unread_json = excluded.unread_json,
+                updated_at = excluded.updated_at;
+        """, (
+            conv["id"],
+            json.dumps(conv.get("participants", [])),
+            json.dumps(conv.get("messages", [])),
+            json.dumps(conv.get("unread", {})),
+            conv.get("updated_at", time.time()),
+        ))
+        conn.commit()
+
+
+def db_load_all_conversations() -> Dict[str, Dict[str, Any]]:
+    convs: Dict[str, Dict[str, Any]] = {}
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, participants_json, messages_json, unread_json, updated_at FROM conversations;")
+        for row in cursor.fetchall():
+            try:
+                convs[row["id"]] = {
+                    "id": row["id"],
+                    "participants": json.loads(row["participants_json"] or "[]"),
+                    "messages": json.loads(row["messages_json"] or "[]"),
+                    "unread": json.loads(row["unread_json"] or "{}"),
+                    "updated_at": row["updated_at"],
+                }
+            except Exception:
+                continue
+    return convs
+
+
+def db_save_report(report: Dict[str, Any]):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT OR REPLACE INTO reports (id, reporter_id, target_id, room_id, reason, chat_log_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?);
+        """, (
+            report["id"],
+            report.get("reporter_id", ""),
+            report.get("target_id", ""),
+            report.get("room_id", ""),
+            report.get("reason", ""),
+            json.dumps(report.get("chat_log", [])),
+            report.get("created_at", time.time()),
+        ))
+        conn.commit()
+
+
+def db_load_all_reports() -> List[Dict[str, Any]]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, reporter_id, target_id, room_id, reason, chat_log_json, created_at FROM reports ORDER BY created_at DESC;")
+        out = []
+        for row in cursor.fetchall():
+            try:
+                out.append({
+                    "id": row["id"],
+                    "reporter_id": row["reporter_id"],
+                    "target_id": row["target_id"],
+                    "room_id": row["room_id"],
+                    "reason": row["reason"],
+                    "chat_log": json.loads(row["chat_log_json"] or "[]"),
+                    "created_at": row["created_at"],
+                })
+            except Exception:
+                continue
+        return out
 
 # ── Friendships DB Operations ──
 
