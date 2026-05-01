@@ -19,7 +19,11 @@ from app.db import (
     db_save_match_item,
     db_load_all_user_history,
     db_save_friendship,
-    db_load_all_friendships
+    db_load_all_friendships,
+    db_save_conversation,
+    db_load_all_conversations,
+    db_save_report,
+    db_load_all_reports,
 )
 
 
@@ -184,6 +188,7 @@ class WouldYouMatchEngine:
         self.share_match_map: Dict[str, MatchState] = {}
         self.user_match_map: Dict[str, str] = {}
         self.user_tickets: Dict[str, str] = {}
+        self.auth_tokens: Dict[str, str] = {}
         self.reports: List[Dict[str, Any]] = []
         
         # Social & History Data Stores
@@ -232,6 +237,16 @@ class WouldYouMatchEngine:
 
             # 3. Load friendships
             self.friendships = db_load_all_friendships()
+
+            # 4. Load persistent DM conversations + reports
+            try:
+                self.conversations = db_load_all_conversations()
+            except Exception:
+                self.conversations = {}
+            try:
+                self.reports = db_load_all_reports()
+            except Exception:
+                self.reports = []
         except Exception as e:
             print(f"[WouldYouMatchEngine] Error loading database: {e}")
 
@@ -260,13 +275,14 @@ class WouldYouMatchEngine:
             is_guest=True
         )
 
+        token = self.issue_token(user_id, kind="guest")
         return {
             "user_id": user_id,
             "alias": alias,
             "avatar_seed": avatar_seed,
             "role": role,
             "is_guest": True,
-            "token": f"jwt_guest_{user_id}"
+            "token": token
         }
 
     def upgrade_account(self, current_user_id: str, username: str, email: str, password: str) -> Dict[str, Any]:
@@ -333,6 +349,7 @@ class WouldYouMatchEngine:
             is_guest=False
         )
 
+        token = self.issue_token(current_user_id, kind="account")
         return {
             "user_id": current_user_id,
             "username": username,
@@ -341,7 +358,7 @@ class WouldYouMatchEngine:
             "avatar_seed": player.avatar_seed,
             "role": player.role,
             "is_guest": False,
-            "token": f"jwt_account_{current_user_id}"
+            "token": token
         }
 
     def login_user(self, login_identifier: str, password: str) -> Optional[Dict[str, Any]]:
@@ -381,6 +398,7 @@ class WouldYouMatchEngine:
 
         if target_uid and stored_hash and verify_password(stored_hash, password):
             p = self.users[target_uid]
+            token = self.issue_token(target_uid, kind="account")
             return {
                 "user_id": target_uid,
                 "username": p.username,
@@ -389,16 +407,26 @@ class WouldYouMatchEngine:
                 "avatar_seed": p.avatar_seed,
                 "role": p.role,
                 "is_guest": False,
-                "token": f"jwt_account_{target_uid}"
+                "token": token
             }
         return None
 
     def update_profile(self, user_id: str, alias: Optional[str] = None, avatar_seed: Optional[str] = None) -> Dict[str, Any]:
+        from app.security import sanitize_input
         p = self.users.get(user_id)
         if not p:
             raise ValueError("User not found")
+        changed = False
+        if alias is not None and str(alias).strip():
+            clean_alias = sanitize_input(str(alias), max_length=25)
+            if len(clean_alias) < 2:
+                raise ValueError("Alias must be at least 2 characters")
+            p.alias = clean_alias
+            changed = True
         if avatar_seed:
-            p.avatar_seed = avatar_seed
+            p.avatar_seed = sanitize_input(str(avatar_seed), max_length=120)
+            changed = True
+        if changed:
             # Persist update to SQLite
             db_save_user(
                 user_id=p.user_id,
@@ -427,6 +455,57 @@ class WouldYouMatchEngine:
 
     def validate_ticket(self, ticket: str) -> Optional[str]:
         return self.user_tickets.pop(ticket, None)
+
+    # ── Auth token verification (opaque jwt_guest_/jwt_account_ tokens) ──
+    def issue_token(self, user_id: str, kind: str = "guest") -> str:
+        prefix = "jwt_account" if kind == "account" else "jwt_guest"
+        token = f"{prefix}_{user_id}_{uuid.uuid4().hex[:8]}"
+        self.auth_tokens[token] = user_id
+        return token
+
+    def verify_token(self, token: Optional[str]) -> Optional[str]:
+        if not token:
+            return None
+        t = token.strip()
+        if t.lower().startswith("bearer "):
+            t = t[7:].strip()
+        # Exact registry hit (preferred)
+        if t in self.auth_tokens:
+            return self.auth_tokens[t]
+        # Back-compat: legacy tokens shaped jwt_guest_{uid} / jwt_account_{uid}
+        for legacy_prefix in ("jwt_account_", "jwt_guest_"):
+            if t.startswith(legacy_prefix):
+                uid = t[len(legacy_prefix):]
+                # Legacy account tokens embed bare uid; guest tokens may too
+                if uid in self.users:
+                    self.auth_tokens[t] = uid
+                    return uid
+        return None
+
+    def leave_match(self, user_id: str) -> Optional[str]:
+        """Safely remove a user from their active match/queues. Never raises."""
+        try:
+            self.dequeue_player(user_id)
+            match_id = self.user_match_map.pop(user_id, None)
+            if match_id and match_id in self.matches:
+                match = self.matches[match_id]
+                # If match already completed, just detach; keep history
+                if match.status == "completed":
+                    return match_id
+                # Mark remaining player mapping intact; void match if a player leaves mid-game
+                others = [o for o in match.players.keys() if o != user_id]
+                if not others:
+                    self.matches.pop(match_id, None)
+                else:
+                    match.status = "voided"
+                    try:
+                        self.analytics_events["match_voided"] += 1
+                    except Exception:
+                        pass
+                return match_id
+            return match_id
+        except Exception:
+            return None
 
     def enqueue_player(self, user_id: str) -> Optional[MatchState]:
         p = self.users.get(user_id)
@@ -761,7 +840,19 @@ class WouldYouMatchEngine:
                 "unread": {u1: 0, u2: 0},
                 "updated_at": time.time()
             }
+            try:
+                db_save_conversation(self.conversations[cid])
+            except Exception as e:
+                print(f"[WouldYouMatchEngine] Error saving conversation: {e}")
         return self.conversations[cid]
+
+    def _persist_conversation(self, cid: str):
+        try:
+            conv = self.conversations.get(cid)
+            if conv:
+                db_save_conversation(conv)
+        except Exception as e:
+            print(f"[WouldYouMatchEngine] Error persisting conversation: {e}")
 
     def add_direct_message(self, sender_id: str, recipient_id: str, body: str, client_msg_id: Optional[str] = None) -> Dict[str, Any]:
         # Block check
@@ -796,6 +887,7 @@ class WouldYouMatchEngine:
         conv["unread"][recipient_id] = conv["unread"].get(recipient_id, 0) + 1
         conv["updated_at"] = now
         self.analytics_events["dm_sent"] += 1
+        self._persist_conversation(conv["id"])
         return msg
 
     def get_user_conversations(self, user_id: str) -> List[Dict[str, Any]]:
@@ -827,6 +919,7 @@ class WouldYouMatchEngine:
             return []
         # Mark as read for this user
         conv["unread"][user_id] = 0
+        self._persist_conversation(conversation_id)
         return conv["messages"]
 
     def add_dm_reaction(self, conversation_id: str, msg_id: str, emoji: str, user_id: str) -> Optional[Dict[str, Any]]:
@@ -841,6 +934,7 @@ class WouldYouMatchEngine:
                     ulist.remove(user_id)
                 else:
                     ulist.append(user_id)
+                self._persist_conversation(conversation_id)
                 return {"msg_id": msg_id, "reactions": reactions}
         return None
 
@@ -869,6 +963,10 @@ class WouldYouMatchEngine:
             "created_at": time.time()
         }
         self.reports.append(report)
+        try:
+            db_save_report(report)
+        except Exception as e:
+            print(f"[WouldYouMatchEngine] Error saving report: {e}")
         return report
 
     # ── Duel Challenge System ──
