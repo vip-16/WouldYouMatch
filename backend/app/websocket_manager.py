@@ -12,6 +12,20 @@ from app.game_engine import engine, MatchState
 
 logger = logging.getLogger(__name__)
 
+# Lightweight per-user WS rate limiting (timestamps per action)
+_WS_RATE: Dict[str, list] = {}
+def _ws_rate_limited(user_id: str, action: str, max_requests: int, window_seconds: int) -> bool:
+    now = time.time()
+    key = f"{action}:{user_id}"
+    hist = _WS_RATE.get(key, [])
+    hist = [t for t in hist if t > now - window_seconds]
+    if len(hist) >= max_requests:
+        _WS_RATE[key] = hist
+        return True
+    hist.append(now)
+    _WS_RATE[key] = hist
+    return False
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, WebSocket] = {}
@@ -111,6 +125,9 @@ async def handle_websocket_message(user_id: str, data_str: str):
 
     # Queue Join
     if event_type == "queue.join":
+        if _ws_rate_limited(user_id, "queue.join", max_requests=6, window_seconds=60):
+            await ws_manager.send_event(user_id, "queue.waiting", {"status": "rate_limited"})
+            return
         logger.info("Queue join requested by user %s", user_id)
         match = engine.enqueue_player(user_id)
         if match:
@@ -354,24 +371,36 @@ async def handle_websocket_message(user_id: str, data_str: str):
 
     elif event_type == "chat.leave":
         match_id = payload.get("match_id") or payload.get("room_id", "").replace("room_", "")
-        if match_id in engine.matches:
-            match = engine.matches[match_id]
-            opp_id = [o for o in match.players.keys() if o != user_id][0]
-            await ws_manager.send_event(opp_id, "chat.closed", {
-                "room_id": match.room_id,
-                "by": "opponent"
-            })
-            await ws_manager.send_event(user_id, "chat.closed", {
-                "room_id": match.room_id,
-                "by": "you"
-            })
-            engine.leave_match(user_id)
+        try:
+            if match_id in engine.matches:
+                match = engine.matches[match_id]
+                others = [o for o in match.players.keys() if o != user_id]
+                opp_id = others[0] if others else None
+                if opp_id:
+                    await ws_manager.send_event(opp_id, "chat.closed", {
+                        "room_id": match.room_id,
+                        "by": "opponent"
+                    })
+                await ws_manager.send_event(user_id, "chat.closed", {
+                    "room_id": match.room_id,
+                    "by": "you"
+                })
+            if hasattr(engine, "leave_match"):
+                engine.leave_match(user_id)
+            else:
+                engine.dequeue_player(user_id)
+                engine.user_match_map.pop(user_id, None)
+        except Exception:
+            logger.exception("chat.leave failed for user %s", user_id)
 
     # ── Persistent 1:1 Direct Messaging Events ──
     elif event_type == "dm.send":
         recipient_id = payload.get("recipient_id")
         body = payload.get("body", "").strip()
         client_msg_id = payload.get("client_msg_id")
+        if _ws_rate_limited(user_id, "dm.send", max_requests=30, window_seconds=60):
+            await ws_manager.send_event(user_id, "dm.error", {"detail": "Rate limited. Slow down."})
+            return
         if recipient_id and body:
             try:
                 msg = engine.add_direct_message(user_id, recipient_id, body, client_msg_id)
