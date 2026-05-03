@@ -18,8 +18,57 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 
 from app.game_engine import engine
-from app.questions import get_daily_question, QUESTIONS
+from app.questions import get_daily_question, vote_question, QUESTIONS
 from app.websocket_manager import ws_manager, handle_websocket_message, launch_match
+
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
+
+
+def _extract_token(request: Request, explicit: Optional[str] = None) -> Optional[str]:
+    if explicit:
+        return explicit
+    auth = request.headers.get("authorization") or request.headers.get("Authorization")
+    if auth:
+        return auth
+    xtoken = request.headers.get("x-auth-token") or request.headers.get("X-Auth-Token")
+    if xtoken:
+        return xtoken
+    for key in ("auth_token", "token"):
+        val = request.query_params.get(key)
+        if val:
+            return val
+    return None
+
+
+def _require_user(request: Request, user_id: str, token: Optional[str] = None) -> str:
+    """Verify opaque token matches the claimed user_id.
+
+    Guests without an issued token remain allowed for backwards compatibility
+    (auto-created sessions), but any registered user must present a valid token.
+    """
+    claimed = (user_id or "").strip()
+    if not claimed:
+        raise HTTPException(status_code=401, detail="Missing user_id")
+    extracted = _extract_token(request, token)
+    verified = engine.verify_token(extracted) if extracted else None
+    if verified:
+        if verified != claimed:
+            raise HTTPException(status_code=401, detail="Token does not match user")
+        return claimed
+    # No (valid) token supplied: only allow guests / unknown ids (auto-create flow)
+    existing = engine.users.get(claimed)
+    if existing is not None and not existing.is_guest:
+        raise HTTPException(status_code=401, detail="Auth token required")
+    return claimed
+
+
+def _require_admin(request: Request):
+    if not ADMIN_TOKEN:
+        raise HTTPException(status_code=503, detail="Admin moderation is not configured")
+    supplied = request.headers.get("x-admin-token") or request.headers.get("X-Admin-Token") or request.query_params.get("admin_token")
+    if not supplied or supplied != ADMIN_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return True
 from app.security import (
     rate_limiter,
     SecurityHeadersMiddleware,
@@ -120,6 +169,13 @@ class DailyAnswerRequest(BaseModel):
     question_id: str
     choice: str
 
+class QuestionVoteRequest(BaseModel):
+    vote: str  # "up" | "down" | "left" | "right"
+    user_id: Optional[str] = None
+
+class ShadowbanRequest(BaseModel):
+    user_id: str
+
 # ── Health Check ──
 @app.get("/api/health")
 def health_check():
@@ -134,7 +190,10 @@ def health_check():
 
 # ── Authentication & Account Management ──
 @app.post("/api/auth/guest")
-def create_guest(req: GuestAuthRequest):
+def create_guest(req: GuestAuthRequest, request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    if rate_limiter.is_rate_limited(client_ip, "auth_guest", max_requests=20, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Too many guest sessions. Please try again shortly.")
     user_data = engine.create_guest_user(req.device_fingerprint or "")
     return {
         "access_token": user_data["token"],
@@ -204,8 +263,22 @@ def login_user(req: LoginRequest, request: Request):
     }
 
 @app.get("/api/me")
-def get_current_user_profile(user_id: str = Query(...)):
-    p = engine.users.get(user_id)
+def get_current_user_profile(request: Request, user_id: str = Query(...), token: Optional[str] = Query(None)):
+    # Auto-create only when no token is presented (fresh guest bootstrap)
+    if not _extract_token(request, token):
+        p = engine.users.get(user_id)
+        if not p:
+            data = engine.create_guest_user()
+            p = engine.users[data["user_id"]]
+            user_id = data["user_id"]
+    else:
+        _require_user(request, user_id, token)
+        p = engine.users.get(user_id)
+    if not p:
+        # Auto-create if not found
+        data = engine.create_guest_user()
+        p = engine.users[data["user_id"]]
+        user_id = data["user_id"]
     if not p:
         # Auto-create if not found
         data = engine.create_guest_user()
@@ -233,7 +306,8 @@ def get_current_user_profile(user_id: str = Query(...)):
     }
 
 @app.patch("/api/me/profile")
-def update_profile(req: UpdateProfileRequest):
+def update_profile(req: UpdateProfileRequest, request: Request):
+    _require_user(request, req.user_id)
     try:
         res = engine.update_profile(req.user_id, req.alias, req.avatar_seed)
         return {"status": "ok", "user": res}
@@ -242,28 +316,33 @@ def update_profile(req: UpdateProfileRequest):
 
 # ── "You" Space: History & Stats ──
 @app.get("/api/me/history")
-def get_user_history(user_id: str = Query(...), limit: int = 30):
+def get_user_history(request: Request, user_id: str = Query(...), limit: int = 30):
+    _require_user(request, user_id)
     history = engine.get_user_history(user_id, limit=limit)
     return {"history": history}
 
 @app.get("/api/me/stats")
-def get_user_stats(user_id: str = Query(...)):
+def get_user_stats(request: Request, user_id: str = Query(...)):
+    _require_user(request, user_id)
     stats = engine.get_user_stats(user_id)
     return {"stats": stats}
 
 # ── "You" Space: Friends & Requests ──
 @app.get("/api/friends")
-def get_friends(user_id: str = Query(...)):
+def get_friends(request: Request, user_id: str = Query(...)):
+    _require_user(request, user_id)
     friends = engine.get_user_friends(user_id)
     return {"friends": friends}
 
 @app.get("/api/friends/requests")
-def get_friend_requests(user_id: str = Query(...)):
+def get_friend_requests(request: Request, user_id: str = Query(...)):
+    _require_user(request, user_id)
     reqs = engine.get_user_friend_requests(user_id)
     return reqs
 
 @app.post("/api/friends/request")
-async def send_friend_request(req: FriendActionRequest):
+async def send_friend_request(req: FriendActionRequest, request: Request):
+    _require_user(request, req.user_id)
     try:
         res = engine.send_friend_request(req.user_id, req.target_user_id)
         # Notify recipient via WebSocket if online
@@ -276,14 +355,16 @@ async def send_friend_request(req: FriendActionRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/api/friends/respond")
-async def respond_friend_request(req: FriendActionRequest):
+async def respond_friend_request(req: FriendActionRequest, request: Request):
+    _require_user(request, req.user_id)
     res = engine.respond_friend_request(req.user_id, req.target_user_id, req.action or "accept")
     if res.get("status") == "mutual":
         await ws_manager.send_event(req.target_user_id, "friend.mutual", {"friend_id": req.user_id})
     return res
 
 @app.post("/api/friends/challenge")
-async def send_duel_challenge(req: DuelChallengeRequest):
+async def send_duel_challenge(req: DuelChallengeRequest, request: Request):
+    _require_user(request, req.challenger_id)
     try:
         res = engine.create_duel_challenge(req.challenger_id, req.target_id)
         ch = res["challenge"]
@@ -302,7 +383,8 @@ async def send_duel_challenge(req: DuelChallengeRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/api/friends/challenge/respond")
-async def respond_duel_challenge_api(req: DuelChallengeRespondRequest):
+async def respond_duel_challenge_api(req: DuelChallengeRespondRequest, request: Request):
+    _require_user(request, req.user_id)
     try:
         res = engine.respond_duel_challenge(req.challenge_id, req.user_id, req.action or "accept")
         if res.get("status") == "accepted":
@@ -321,7 +403,8 @@ async def respond_duel_challenge_api(req: DuelChallengeRespondRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/api/users/{user_id}/block")
-def block_user(user_id: str, target_id: str = Query(...)):
+def block_user(user_id: str, request: Request, target_id: str = Query(...)):
+    _require_user(request, user_id)
     engine.block_user(user_id, target_id)
     return {"status": "blocked", "target_id": target_id}
 
@@ -374,12 +457,14 @@ def get_public_profile(target_id: str, viewer_id: Optional[str] = Query(None)):
 
 # ── Persistent Direct Messaging (DMs) ──
 @app.get("/api/conversations")
-def get_conversations(user_id: str = Query(...)):
+def get_conversations(request: Request, user_id: str = Query(...)):
+    _require_user(request, user_id)
     convs = engine.get_user_conversations(user_id)
     return {"conversations": convs}
 
 @app.get("/api/conversations/with_friend")
-def get_or_create_conversation_with_friend(user_id: str = Query(...), friend_id: str = Query(...)):
+def get_or_create_conversation_with_friend(request: Request, user_id: str = Query(...), friend_id: str = Query(...)):
+    _require_user(request, user_id)
     conv = engine.get_or_create_conversation(user_id, friend_id)
     other_user = engine.users.get(friend_id)
     last_msg = conv["messages"][-1] if conv["messages"] else None
@@ -399,12 +484,17 @@ def get_or_create_conversation_with_friend(user_id: str = Query(...), friend_id:
     }
 
 @app.get("/api/conversations/{conversation_id}/messages")
-def get_conversation_messages(conversation_id: str, user_id: str = Query(...)):
+def get_conversation_messages(conversation_id: str, request: Request, user_id: str = Query(...)):
+    _require_user(request, user_id)
     msgs = engine.get_conversation_messages(conversation_id, user_id)
     return {"messages": msgs}
 
 @app.post("/api/conversations/messages")
-async def send_direct_message(req: DirectMessageSendRequest):
+async def send_direct_message(req: DirectMessageSendRequest, request: Request):
+    _require_user(request, req.sender_id)
+    client_ip = request.client.host if request.client else "unknown"
+    if rate_limiter.is_rate_limited(f"{client_ip}:{req.sender_id}", "dm_send", max_requests=30, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Too many messages. Slow down.")
     try:
         msg = engine.add_direct_message(req.sender_id, req.recipient_id, req.body, req.client_msg_id)
         # Real-time WebSocket delivery to recipient if online
@@ -418,7 +508,12 @@ async def send_direct_message(req: DirectMessageSendRequest):
 
 # ── WebSocket Ticketing & Gateway ──
 @app.post("/api/ws/ticket")
-def create_ws_ticket(req: TicketRequest):
+def create_ws_ticket(req: TicketRequest, request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    if rate_limiter.is_rate_limited(client_ip, "ws_ticket", max_requests=30, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Too many ticket requests.")
+    if req.user_id in engine.users:
+        _require_user(request, req.user_id)
     if req.user_id not in engine.users:
         user_data = engine.create_guest_user()
         req.user_id = user_data["user_id"]
@@ -449,8 +544,42 @@ async def websocket_endpoint(websocket: WebSocket, ticket: str = Query(...)):
 def fetch_daily_question():
     return get_daily_question()
 
+@app.post("/api/questions/{question_id}/vote")
+def vote_on_question(question_id: str, req: QuestionVoteRequest, request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    if rate_limiter.is_rate_limited(client_ip, "question_vote", max_requests=60, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Too many votes. Slow down.")
+    v = (req.vote or "").strip().lower()
+    vote_type = "up" if v in ("up", "left") else "down" if v in ("down", "right") else None
+    if not vote_type:
+        raise HTTPException(status_code=400, detail="vote must be up/down (or left/right)")
+    updated = vote_question(question_id, vote_type)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Question not found")
+    return {"status": "ok", "question": updated}
+
+
+@app.post("/api/admin/shadowban")
+def admin_shadowban(req: ShadowbanRequest, request: Request):
+    _require_admin(request)
+    state = engine.toggle_shadowban(req.user_id)
+    return {"status": "ok", "user_id": req.user_id, "shadowbanned": state}
+
+
+@app.get("/api/admin/reports")
+def admin_list_reports(request: Request, limit: int = 50):
+    _require_admin(request)
+    return {"reports": engine.reports[: max(1, min(limit, 200))]}
+
+
 @app.post("/api/daily/answer")
 def submit_daily_answer(req: DailyAnswerRequest):
+    choice = (req.choice or "").strip().lower()
+    if choice in ("left", "right"):
+        try:
+            vote_question(req.question_id, "up" if choice == "left" else "down")
+        except Exception:
+            pass
     q = get_daily_question()
     return {
         "question_id": req.question_id,
