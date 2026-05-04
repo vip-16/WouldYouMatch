@@ -276,10 +276,16 @@ def get_round_questions(count: int = 7, user_ids: Optional[List[str]] = None) ->
     return selected
 
 def get_daily_question() -> Dict[str, Any]:
-    """Retrieves the featured daily dilemma from the AI question bank."""
-    daily = next((q for q in QUESTIONS if q.get("daily_date") == "2026-08-19"), None)
+    """Retrieves the featured daily dilemma, rotating deterministically by date."""
+    from datetime import date as _date
+    today = _date.today().isoformat()
+    daily = next((q for q in QUESTIONS if q.get("daily_date") == today), None)
     if not daily:
-        daily = QUESTIONS[0]
+        pool = [q for q in QUESTIONS if q.get("active", True)] or QUESTIONS
+        if not pool:
+            raise ValueError("Question bank is empty")
+        idx = _date.today().toordinal() % len(pool)
+        daily = pool[idx]
     
     votes_up = daily.get("votes_up", 120)
     votes_down = daily.get("votes_down", 80)
