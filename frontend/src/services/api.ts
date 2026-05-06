@@ -9,6 +9,48 @@ const env = (import.meta as any).env || {};
 // When deployed (e.g. Vercel, Netlify, Render, Railway), configure VITE_API_URL.
 export const API_BASE: string = (env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
+export const getAuthToken = (): string | null => {
+  try {
+    return (
+      localStorage.getItem('wouldyoumatch_auth_token') ||
+      localStorage.getItem('wyrmg_auth_token') ||
+      sessionStorage.getItem('wyrmg_auth_token')
+    );
+  } catch {
+    return null;
+  }
+};
+
+export const setAuthToken = (token: string) => {
+  try {
+    localStorage.setItem('wouldyoumatch_auth_token', token);
+    localStorage.setItem('wyrmg_auth_token', token);
+    sessionStorage.setItem('wyrmg_auth_token', token);
+  } catch {
+    /* storage unavailable */
+  }
+};
+
+export const clearAuthToken = () => {
+  try {
+    localStorage.removeItem('wouldyoumatch_auth_token');
+    localStorage.removeItem('wyrmg_auth_token');
+    sessionStorage.removeItem('wyrmg_auth_token');
+  } catch {
+    /* noop */
+  }
+};
+
+export const authHeaders = (extra: Record<string, string> = {}): Record<string, string> => {
+  const token = getAuthToken();
+  return token ? { ...extra, Authorization: `Bearer ${token}` } : { ...extra };
+};
+
+export const apiFetch = (path: string, init: RequestInit = {}): Promise<Response> => {
+  const headers = authHeaders({ 'Content-Type': 'application/json', ...((init.headers as Record<string, string>) || {}) });
+  return fetch(`${API_BASE}${path}`, { ...init, headers });
+};
+
 // Derives WebSocket URL automatically based on protocol (ws:// or wss://)
 export const getWsUrl = (ticket?: string): string => {
   if (env.VITE_WS_URL) {
