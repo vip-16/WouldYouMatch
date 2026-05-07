@@ -21,7 +21,7 @@ import { trackPageView } from './services/analytics';
 import { User, Question, RoundResult, Message, AppStage, WSFrame } from './types';
 import { wsClient } from './services/websocket';
 import { sounds } from './services/sound';
-import { API_BASE } from './services/api';
+import { API_BASE, apiFetch, setAuthToken, clearAuthToken } from './services/api';
 
 export const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -176,7 +176,7 @@ export const App: React.FC = () => {
     const savedUserId = sessionGuestId || localStorage.getItem('wouldyoumatch_user_id') || localStorage.getItem('wyrmg_user_id');
     if (savedUserId) {
       try {
-        const res = await fetch(`${API_BASE}/api/me?user_id=${savedUserId}`);
+        const res = await apiFetch(`/api/me?user_id=${savedUserId}`);
         if (res.ok) {
           const data = await res.json();
           // A legacy localStorage guest must not be reused in a newly opened
@@ -193,13 +193,13 @@ export const App: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/auth/guest`, {
+      const res = await apiFetch(`/api/auth/guest`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ device_fingerprint: 'browser_fp_123' }),
       });
       if (res.ok) {
         const data = await res.json();
+        if (data.access_token) setAuthToken(data.access_token);
         setUser(data.user);
         sessionStorage.setItem('wyrmg_guest_user_id', data.user.id);
         refreshUserProfile(data.user.id);
@@ -213,7 +213,7 @@ export const App: React.FC = () => {
 
   const refreshUserProfile = async (userId: string) => {
     try {
-      const res = await fetch(`${API_BASE}/api/me?user_id=${userId}`);
+      const res = await apiFetch(`/api/me?user_id=${userId}`);
       if (res.ok) {
         const data = await res.json();
         setUser(data);
@@ -234,20 +234,19 @@ export const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    localStorage.removeItem('wouldyoumatch_auth_token');
-    localStorage.removeItem('wyrmg_auth_token');
+    clearAuthToken();
     localStorage.removeItem('wouldyoumatch_user_id');
     localStorage.removeItem('wyrmg_user_id');
     sessionStorage.removeItem('wyrmg_guest_user_id');
     setShowYouSpace(false);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/guest`, {
+      const res = await apiFetch(`/api/auth/guest`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ device_fingerprint: `fp_${Date.now()}` }),
       });
       if (res.ok) {
         const data = await res.json();
+        if (data.access_token) setAuthToken(data.access_token);
         setUser(data.user);
         sessionStorage.setItem('wyrmg_guest_user_id', data.user.id);
         refreshUserProfile(data.user.id);
@@ -262,9 +261,8 @@ export const App: React.FC = () => {
   const getWsTicket = useCallback(async (): Promise<string> => {
     const activeUser = userRef.current;
     if (!activeUser) throw new Error('No active user');
-    const res = await fetch(`${API_BASE}/api/ws/ticket`, {
+    const res = await apiFetch(`/api/ws/ticket`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: activeUser.id }),
     });
     if (!res.ok) throw new Error('Unable to get WebSocket ticket');
@@ -382,9 +380,8 @@ export const App: React.FC = () => {
       wsClient.send('duel.challenge', { target_id: friendId });
     } else {
       try {
-        await fetch(`${API_BASE}/api/friends/challenge`, {
+        await apiFetch(`/api/friends/challenge`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ challenger_id: user.id, target_id: friendId }),
         });
       } catch (e) {
@@ -408,9 +405,8 @@ export const App: React.FC = () => {
       wsClient.send('duel.respond', { challenge_id: challengeId, action });
     } else {
       try {
-        await fetch(`${API_BASE}/api/friends/challenge/respond`, {
+        await apiFetch(`/api/friends/challenge/respond`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ challenge_id: challengeId, user_id: user.id, action }),
         });
       } catch (e) {
@@ -530,7 +526,7 @@ export const App: React.FC = () => {
   const handleBlockUser = async (targetId: string) => {
     if (!user?.id) return;
     try {
-      await fetch(`${API_BASE}/api/users/${user.id}/block?target_id=${targetId}`, {
+      await apiFetch(`/api/users/${user.id}/block?target_id=${targetId}`, {
         method: 'POST',
       });
       refreshUserProfile(user.id);
@@ -546,9 +542,8 @@ export const App: React.FC = () => {
       return;
     }
     try {
-      await fetch(`${API_BASE}/api/friends/request`, {
+      await apiFetch(`/api/friends/request`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id, target_user_id: targetId }),
       });
       refreshUserProfile(user.id);
@@ -575,6 +570,7 @@ export const App: React.FC = () => {
           onLogout={handleLogout}
         />
         <NotFoundScreen onGoHome={navigateHome} />
+        {/* Exclusive to the 404 tree (early return) — only one CookieConsentBanner ever mounts. */}
         <CookieConsentBanner
           onOpenPrivacyPolicy={() => navigateTo('/privacy-policy')}
           forceOpen={showCookieSettings}
@@ -754,9 +750,8 @@ export const App: React.FC = () => {
           }}
           onSubmit={async (reason) => {
             try {
-              await fetch(`${API_BASE}/api/reports`, {
+              await apiFetch(`/api/reports`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   reporter_id: user?.id || 'usr_guest',
                   target_id: reportTarget.id,
