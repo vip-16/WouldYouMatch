@@ -5,7 +5,7 @@ import { Button } from './ui/Button';
 import { Avatar } from './ui/Avatar';
 import { Chip } from './ui/Chip';
 import { User, Friend, FriendRequestsData, MatchHistoryItem, UserStats } from '../types';
-import { API_BASE } from '../services/api';
+import { apiFetch } from '../services/api';
 
 interface YouSpaceModalProps {
   currentUser: User | null;
@@ -63,10 +63,10 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
     setLoadingData(true);
     try {
       const [friendsRes, reqsRes, historyRes, statsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/friends?user_id=${currentUser.id}`),
-        fetch(`${API_BASE}/api/friends/requests?user_id=${currentUser.id}`),
-        fetch(`${API_BASE}/api/me/history?user_id=${currentUser.id}`),
-        fetch(`${API_BASE}/api/me/stats?user_id=${currentUser.id}`),
+        apiFetch(`/api/friends?user_id=${currentUser.id}`),
+        apiFetch(`/api/friends/requests?user_id=${currentUser.id}`),
+        apiFetch(`/api/me/history?user_id=${currentUser.id}`),
+        apiFetch(`/api/me/stats?user_id=${currentUser.id}`),
       ]);
 
       if (friendsRes.ok) {
@@ -110,9 +110,8 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
 
     setSavingProfile(true);
     try {
-      const res = await fetch(`${API_BASE}/api/me/profile`, {
+      const res = await apiFetch(`/api/me/profile`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: currentUser.id,
           avatar_seed: avatarSeed,
@@ -135,12 +134,11 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
   const handleRespondRequest = async (requesterId: string, action: 'accept' | 'ignore') => {
     if (!currentUser?.id) return;
     try {
-      const res = await fetch(`${API_BASE}/api/friends/respond`, {
+      const res = await apiFetch(`/api/friends/respond`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: currentUser.id,
-          requester_id: requesterId,
+          target_user_id: requesterId,
           action,
         }),
       });
