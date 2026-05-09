@@ -5,7 +5,7 @@ import { Avatar } from './ui/Avatar';
 import { ConversationItem, DirectMessage, User, WSFrame } from '../types';
 import { wsClient } from '../services/websocket';
 import { sounds } from '../services/sound';
-import { API_BASE } from '../services/api';
+import { apiFetch } from '../services/api';
 import {
   Smile,
   Send,
@@ -94,7 +94,7 @@ export const DirectMessageModal: React.FC<DirectMessageModalProps> = ({
   const fetchConversations = useCallback(async () => {
     if (!currentUser?.id) return;
     try {
-      const res = await fetch(`${API_BASE}/api/conversations?user_id=${currentUser.id}`);
+      const res = await apiFetch(`/api/conversations?user_id=${currentUser.id}`);
       let convList: ConversationItem[] = [];
       if (res.ok) {
         const data = await res.json();
@@ -114,8 +114,8 @@ export const DirectMessageModal: React.FC<DirectMessageModalProps> = ({
           setMobileView('chat');
         } else {
           try {
-            const wfRes = await fetch(
-              `${API_BASE}/api/conversations/with_friend?user_id=${currentUser.id}&friend_id=${targetFriendId}`
+            const wfRes = await apiFetch(
+              `/api/conversations/with_friend?user_id=${currentUser.id}&friend_id=${targetFriendId}`
             );
             if (wfRes.ok) {
               const wfData = await wfRes.json();
@@ -151,8 +151,8 @@ export const DirectMessageModal: React.FC<DirectMessageModalProps> = ({
     if (!currentUser?.id) return;
     setLoadingMsgs(true);
     try {
-      const res = await fetch(
-        `${API_BASE}/api/conversations/${convId}/messages?user_id=${currentUser.id}`
+      const res = await apiFetch(
+        `/api/conversations/${convId}/messages?user_id=${currentUser.id}`
       );
       if (res.ok) {
         const data = await res.json();
@@ -303,9 +303,8 @@ export const DirectMessageModal: React.FC<DirectMessageModalProps> = ({
 
     // Also persist via HTTP endpoint (with deduplication client_msg_id)
     try {
-      const res = await fetch(`${API_BASE}/api/conversations/messages`, {
+      const res = await apiFetch(`/api/conversations/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sender_id: currentUser.id,
           recipient_id: selectedConv.friend.id,

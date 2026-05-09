@@ -4,7 +4,7 @@ import { Button } from './ui/Button';
 import { Avatar } from './ui/Avatar';
 import { Chip } from './ui/Chip';
 import { PublicProfileData, User } from '../types';
-import { API_BASE } from '../services/api';
+import { apiFetch } from '../services/api';
 
 interface PublicProfileModalProps {
   targetUserId: string;
@@ -43,7 +43,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({
     setError(null);
     try {
       const viewerParam = currentUser?.id ? `?viewer_id=${currentUser.id}` : '';
-      const res = await fetch(`${API_BASE}/api/users/${targetUserId}${viewerParam}`);
+      const res = await apiFetch(`/api/users/${targetUserId}${viewerParam}`);
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
