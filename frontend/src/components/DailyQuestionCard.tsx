@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DailyQuestion } from '../types';
 import { Button } from './ui/Button';
-import { API_BASE } from '../services/api';
+import { apiFetch } from '../services/api';
 
 interface DailyQuestionCardProps {
   onPlayQuickMatch: () => void;
@@ -13,7 +13,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({ onPlayQuic
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/daily`)
+    apiFetch(`/api/daily`)
       .then((res) => res.json())
       .then((data) => {
         setDaily(data);
@@ -35,10 +35,14 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({ onPlayQuic
   const handleAnswer = (choice: 'left' | 'right') => {
     if (answeredChoice || !daily) return;
     setAnsweredChoice(choice);
-    fetch(`${API_BASE}/api/daily/answer`, {
+    apiFetch(`/api/daily/answer`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question_id: daily.id, choice }),
+    }).catch(() => {});
+    // Also record a persistent vote so Daily results actually move
+    apiFetch(`/api/questions/${daily.id}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({ vote: choice === 'left' ? 'up' : 'down' }),
     }).catch(() => {});
   };
 

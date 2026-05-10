@@ -3,7 +3,7 @@ import { ModalShell } from './ui/ModalShell';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { User } from '../types';
-import { API_BASE } from '../services/api';
+import { API_BASE, apiFetch, setAuthToken } from '../services/api';
 
 interface AccountUpgradeModalProps {
   currentUser: User | null;
@@ -70,9 +70,8 @@ export const AccountUpgradeModal: React.FC<AccountUpgradeModalProps> = ({
 
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/api/auth/upgrade`, {
+        const res = await apiFetch(`/api/auth/upgrade`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: currentUser?.id || '',
             username: cleanUser,
@@ -84,8 +83,7 @@ export const AccountUpgradeModal: React.FC<AccountUpgradeModalProps> = ({
 
         const data = await res.json();
         if (res.ok) {
-          localStorage.setItem('wouldyoumatch_auth_token', data.access_token);
-          localStorage.setItem('wyrmg_auth_token', data.access_token);
+          if (data.access_token) setAuthToken(data.access_token);
           onSuccess(data.user);
           onClose();
         } else {
@@ -108,9 +106,8 @@ export const AccountUpgradeModal: React.FC<AccountUpgradeModalProps> = ({
 
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/api/auth/login`, {
+        const res = await apiFetch(`/api/auth/login`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             identifier: cleanIdentifier,
             password: cleanPass,
@@ -119,8 +116,7 @@ export const AccountUpgradeModal: React.FC<AccountUpgradeModalProps> = ({
 
         const data = await res.json();
         if (res.ok) {
-          localStorage.setItem('wouldyoumatch_auth_token', data.access_token);
-          localStorage.setItem('wyrmg_auth_token', data.access_token);
+          if (data.access_token) setAuthToken(data.access_token);
           onSuccess(data.user);
           onClose();
         } else {
