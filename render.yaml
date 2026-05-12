@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: wouldyoumatch-api
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    rootDir: backend
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_PATH
+        value: /data/wouldyoumatch.db
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://wouldyoumatch.app,https://www.wouldyoumatch.app
+      - key: FRONTEND_URL
+        value: https://wouldyoumatch.app
+    disk:
+      name: wyrmg-data
+      mountPath: /data
+      sizeGB: 1
