@@ -542,7 +542,10 @@ async def websocket_endpoint(websocket: WebSocket, ticket: str = Query(...)):
 # ── Daily Vibe Question ──
 @app.get("/api/daily")
 def fetch_daily_question():
-    return get_daily_question()
+    try:
+        return get_daily_question()
+    except ValueError:
+        raise HTTPException(status_code=404, detail="No dilemmas available right now")
 
 @app.post("/api/questions/{question_id}/vote")
 def vote_on_question(question_id: str, req: QuestionVoteRequest, request: Request):
@@ -586,7 +589,7 @@ def submit_daily_answer(req: DailyAnswerRequest):
         "your_choice": req.choice,
         "left_percent": q["left_percent"],
         "right_percent": q["right_percent"],
-        "total_votes": q["total_votes"] + 1
+        "total_votes": q["total_votes"]
     }
 
 @app.post("/api/reports")
@@ -602,12 +605,31 @@ def report_user(req: ReportRequest, request: Request):
     report = engine.add_report(req.reporter_id or "usr_guest", req.target_id, req.room_id, clean_reason)
     return {"status": "submitted", "report_id": report["id"]}
 
+# ── Public leaderboard (only recorded duels, never invented) ──
+@app.get("/api/leaderboard")
+def get_leaderboard(window: str = Query("7days"), limit: int = Query(10)):
+    key = (window or "7days").lower()
+    days = {"7days": 7, "30days": 30, "alltime": None}.get(key, 7)
+    board = engine.get_leaderboard(limit=limit, days=days)
+    return {"window": key, "leaderboard": board}
+
+
 # ── Public Share Card Page (OG Meta Tagged) ──
 @app.get("/share/{share_hash}", response_class=HTMLResponse)
 def get_share_card(share_hash: str):
     match = engine.share_match_map.get(share_hash)
-    score_text = f"{match.vibe_score}/{match.round_count}" if match else "6/7"
-    pct = round((match.vibe_score / match.round_count)*100) if match else 86
+    if not match:
+        return HTMLResponse(
+            content="""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">"""
+                    """<title>WouldYouMatch? — Duel not found</title></head>"""
+                    """<body style="font-family:sans-serif;background:#09090b;color:#f4f4f5;"""
+                    """display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">"""
+                    """<p>This duel result does not exist or is no longer available.</p>"""
+                    """</body></html>""",
+            status_code=404,
+        )
+    score_text = f"{match.vibe_score}/{match.round_count}"
+    pct = round((match.vibe_score / match.round_count)*100)
     site_url = os.getenv("VITE_SITE_URL") or os.getenv("FRONTEND_URL") or "https://wouldyoumatch.app"
     
     html_content = f"""

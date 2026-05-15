@@ -619,8 +619,8 @@ class WouldYouMatchEngine:
                 "agreed_rounds_count": 0,
                 "disagreed_rounds_count": 0,
                 "high_vibe_duels_count": 0,
-                "vibe_archetype": "Curious Explorer",
-                "archetype_quote": "Ready to dive into the arena and discover your true vibe alignment."
+                "vibe_archetype": "Unranked",
+                "archetype_quote": "No duels recorded yet — play your first duel to earn a vibe archetype."
             }
         
         scores = [h["synergy_pct"] for h in history]
@@ -667,6 +667,35 @@ class WouldYouMatchEngine:
             "vibe_archetype": archetype,
             "archetype_quote": quote
         }
+
+    # ── Real Leaderboard (computed only from recorded duels) ──
+    def get_leaderboard(self, limit: int = 10, days: Optional[int] = None) -> List[Dict[str, Any]]:
+        now = time.time()
+        cutoff = (now - days * 86400) if days else None
+        rows: List[Dict[str, Any]] = []
+        for uid, p in self.users.items():
+            hist = self.user_match_history.get(uid, [])
+            if cutoff is not None:
+                hist = [h for h in hist if h.get("created_at", 0) >= cutoff]
+            if not hist:
+                continue
+            scores = [h.get("synergy_pct", 0) for h in hist]
+            avg = round(sum(scores) / len(scores))
+            rows.append({
+                "id": uid,
+                "alias": p.alias,
+                "avatar_seed": p.avatar_seed,
+                "online": p.connected,
+                "is_guest": p.is_guest,
+                "total_duels": len(hist),
+                "avg_synergy": avg,
+                "best_synergy": max(scores),
+            })
+        rows.sort(key=lambda r: (-r["avg_synergy"], -r["total_duels"]))
+        ranked = []
+        for i, r in enumerate(rows[: max(1, min(limit, 50))], start=1):
+            ranked.append({"rank": i, **r})
+        return ranked
 
     # ── Mutual Synergy & Shared History ──
     def get_mutual_synergy(self, user_a: str, user_b: str) -> Dict[str, Any]:
