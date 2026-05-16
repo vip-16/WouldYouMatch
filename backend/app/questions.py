@@ -27,9 +27,7 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["silly", "animals", "funny"],
         "hash": "1b41714e634270018be4efec551ebdd542e91b101b1c4254b20bb5b0200eb8e5",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 180,
-        "votes_down": 24
+        "active": True
     },
     {
         "id": "ai_wyr_0002",
@@ -39,9 +37,7 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["awkward", "funny", "music"],
         "hash": "000ea3ce734bd43aee5f1ceaa8fabffeff380d591103e836adb5f678e6881bf3",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 210,
-        "votes_down": 19
+        "active": True
     },
     {
         "id": "ai_wyr_0003",
@@ -51,9 +47,7 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["gross", "awkward", "bodily functions"],
         "hash": "0b402caabfa6e7416950abfd55eb96bb0e1b4729b3935056dba4ab5173ac706b",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 140,
-        "votes_down": 30
+        "active": True
     },
     {
         "id": "ai_wyr_0004",
@@ -63,9 +57,7 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["social", "awkward", "hilarious"],
         "hash": "b02f16f451adf3d7c57212ecc5f943023e0074a51f3618beeb85f5cce855a1be",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 290,
-        "votes_down": 22
+        "active": True
     },
     {
         "id": "ai_wyr_0005",
@@ -75,9 +67,7 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["fashion", "awkward", "events"],
         "hash": "fb6f273020b8ee35f5043fe6f5b14def7bcd0390109d6d134a005aeca57c8440",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 250,
-        "votes_down": 18
+        "active": True
     },
     {
         "id": "ai_wyr_0013",
@@ -87,9 +77,7 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["truth", "mind", "existential"],
         "hash": "442252fd3cccadaaa574b79a5d17de99763cb5de8fc2f4db43fa589eff9c3023",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 410,
-        "votes_down": 35
+        "active": True
     },
     {
         "id": "ai_wyr_0016",
@@ -99,9 +87,7 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["destiny", "time travel", "fate"],
         "hash": "394e1c86b3fc4ca5551f4bb205951e51c1a3b7aa60f5e35f67f077f117aa7cf9",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 365,
-        "votes_down": 28
+        "active": True
     },
     {
         "id": "ai_wyr_0021",
@@ -111,9 +97,7 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["immortality", "love", "mortality"],
         "hash": "097360184ba9bf1ced3a030fa6b0d2ca7e4234bfdaec2564f9ce22481d1b3244",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 490,
-        "votes_down": 16
+        "active": True
     },
     {
         "id": "ai_wyr_0025",
@@ -123,9 +107,7 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["superpowers", "mind reading", "future"],
         "hash": "c8f6b95093dc7f50d2b4d7b39b10b40131b873d1ecd2fccea3e3b1e9b137c359",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 320,
-        "votes_down": 25
+        "active": True
     },
     {
         "id": "ai_wyr_0028",
@@ -135,9 +117,7 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["superpowers", "skills", "talent"],
         "hash": "246b4f1ae1b7f6e348d69afdeeda809e2850f7698594456bd94880a90dde07d5",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 512,
-        "votes_down": 14
+        "active": True
     },
     {
         "id": "ai_wyr_0029",
@@ -148,8 +128,6 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "hash": "19d5500d8c28755df220763d9f8dfc06f5e20af0c6b7f344db51d8baa130585a",
         "source": "ai_gemini",
         "active": True,
-        "votes_up": 640,
-        "votes_down": 32,
         "daily_date": "2026-08-19"
     },
     {
@@ -160,14 +138,24 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
         "tags": ["dating", "relationships", "looks"],
         "hash": "50e42dea90099239b4a495616a32692469789e49a23dd35727536a423c3324f0",
         "source": "ai_gemini",
-        "active": True,
-        "votes_up": 380,
-        "votes_down": 45
+        "active": True
     }
 ]
 
 # Track seen questions per user: user_id -> Set of question_ids
 USER_SEEN_HISTORY: Dict[str, Set[str]] = {}
+
+def _ensure_community_votes(q: Dict[str, Any]) -> bool:
+    """Guarantees a real-vote counter on a question. Returns True if migrated."""
+    cv = q.get("community_votes")
+    if not isinstance(cv, dict) or not isinstance(cv.get("left"), int) or not isinstance(cv.get("right"), int):
+        q["community_votes"] = {
+            "left": cv.get("left", 0) if isinstance(cv, dict) else 0,
+            "right": cv.get("right", 0) if isinstance(cv, dict) else 0,
+        }
+        return True
+    return False
+
 
 def load_questions() -> List[Dict[str, Any]]:
     """Loads questions from persistent JSON file or initializes with AI defaults."""
@@ -176,6 +164,12 @@ def load_questions() -> List[Dict[str, Any]]:
             with open(DB_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, list) and len(data) > 0:
+                    migrated = False
+                    for q in data:
+                        if isinstance(q, dict) and _ensure_community_votes(q):
+                            migrated = True
+                    if migrated:
+                        save_questions(data)
                     return data
         except Exception as e:
             logger.error(f"Failed to load questions from {DB_PATH}: {e}")
@@ -184,6 +178,7 @@ def load_questions() -> List[Dict[str, Any]]:
     for q in DEFAULT_QUESTIONS:
         if "hash" not in q:
             q["hash"] = compute_dilemma_hash(q["left"], q["right"])
+        _ensure_community_votes(q)
     save_questions(DEFAULT_QUESTIONS)
     return list(DEFAULT_QUESTIONS)
 
@@ -276,22 +271,32 @@ def get_round_questions(count: int = 7, user_ids: Optional[List[str]] = None) ->
     return selected
 
 def get_daily_question() -> Dict[str, Any]:
-    """Retrieves the featured daily dilemma, rotating deterministically by date."""
+    """Retrieves the featured daily dilemma.
+
+    Percentages reflect only real community votes recorded on this site.
+    When nobody has voted yet, percentages are None so the UI can show an
+    honest empty state instead of invented numbers.
+    """
     from datetime import date as _date
     today = _date.today().isoformat()
     daily = next((q for q in QUESTIONS if q.get("daily_date") == today), None)
     if not daily:
-        pool = [q for q in QUESTIONS if q.get("active", True)] or QUESTIONS
+        pool = [q for q in QUESTIONS if q.get("active", True)]
         if not pool:
             raise ValueError("Question bank is empty")
         idx = _date.today().toordinal() % len(pool)
         daily = pool[idx]
-    
-    votes_up = daily.get("votes_up", 120)
-    votes_down = daily.get("votes_down", 80)
-    total = votes_up + votes_down
-    left_pct = int(round((votes_up / total) * 100)) if total > 0 else 50
-    right_pct = 100 - left_pct
+
+    cv = daily.get("community_votes") or {}
+    left_votes = cv.get("left", 0) if isinstance(cv.get("left"), int) else 0
+    right_votes = cv.get("right", 0) if isinstance(cv.get("right"), int) else 0
+    total = left_votes + right_votes
+    if total > 0:
+        left_pct: Optional[int] = int(round((left_votes / total) * 100))
+        right_pct: Optional[int] = 100 - left_pct
+    else:
+        left_pct = None
+        right_pct = None
 
     return {
         "id": daily["id"],
@@ -304,12 +309,17 @@ def get_daily_question() -> Dict[str, Any]:
     }
 
 def vote_question(question_id: str, vote_type: str) -> Optional[Dict[str, Any]]:
+    """Records one real community vote. Seed popularity numbers are never touched."""
     q = next((q for q in QUESTIONS if q["id"] == question_id), None)
     if q:
-        if vote_type == "up":
-            q["votes_up"] = q.get("votes_up", 0) + 1
-        elif vote_type == "down":
-            q["votes_down"] = q.get("votes_down", 0) + 1
+        _ensure_community_votes(q)
+        cv = q["community_votes"]
+        if vote_type in ("up", "left"):
+            cv["left"] = cv.get("left", 0) + 1
+        elif vote_type in ("down", "right"):
+            cv["right"] = cv.get("right", 0) + 1
+        else:
+            return None
         save_questions(QUESTIONS)
         return q
     return None

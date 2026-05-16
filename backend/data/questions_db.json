@@ -11,9 +11,11 @@
     "hash": "1b41714e634270018be4efec551ebdd542e91b101b1c4254b20bb5b0200eb8e5",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 100,
-    "votes_down": 10,
-    "id": "ai_wyr_0001"
+    "id": "ai_wyr_0001",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Have a dramatic brass band follow your mistakes",
@@ -27,9 +29,11 @@
     "hash": "000ea3ce734bd43aee5f1ceaa8fabffeff380d591103e836adb5f678e6881bf3",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 117,
-    "votes_down": 17,
-    "id": "ai_wyr_0002"
+    "id": "ai_wyr_0002",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Burp the national anthem whenever you meet someone",
@@ -43,9 +47,11 @@
     "hash": "0b402caabfa6e7416950abfd55eb96bb0e1b4729b3935056dba4ab5173ac706b",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 134,
-    "votes_down": 24,
-    "id": "ai_wyr_0003"
+    "id": "ai_wyr_0003",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Shout your thoughts out loud every ten minutes",
@@ -59,9 +65,11 @@
     "hash": "b02f16f451adf3d7c57212ecc5f943023e0074a51f3618beeb85f5cce855a1be",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 151,
-    "votes_down": 31,
-    "id": "ai_wyr_0004"
+    "id": "ai_wyr_0004",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Wear a soggy wet suit to every wedding",
@@ -75,9 +83,11 @@
     "hash": "fb6f273020b8ee35f5043fe6f5b14def7bcd0390109d6d134a005aeca57c8440",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 168,
-    "votes_down": 38,
-    "id": "ai_wyr_0005"
+    "id": "ai_wyr_0005",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Have wet confetti shoot from ears when happy",
@@ -91,9 +101,11 @@
     "hash": "947466f90fe08d1a01af66f72fdac54c25adf44687a168321a60cce085ac9e1b",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 185,
-    "votes_down": 45,
-    "id": "ai_wyr_0006"
+    "id": "ai_wyr_0006",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "High-five everyone you see on the street daily",
@@ -107,9 +119,11 @@
     "hash": "b97d35d2c627d05019a7fe77bd49e3e20149d6d718afc724e2df93287ea06b6b",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 202,
-    "votes_down": 52,
-    "id": "ai_wyr_0007"
+    "id": "ai_wyr_0007",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Always smell strongly like old movie theater butter",
@@ -123,9 +137,11 @@
     "hash": "a32ace88abdf45a4e012f1cc02a31332cb94261ea19b8208986d2b6362037067",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 219,
-    "votes_down": 14,
-    "id": "ai_wyr_0008"
+    "id": "ai_wyr_0008",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Moonwalk everywhere instead of walking normally",
@@ -139,9 +155,11 @@
     "hash": "2a918e2fcb08957d63ee2fbad75329ac8d4edaf2acba884dc17c387ee7fa0488",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 236,
-    "votes_down": 21,
-    "id": "ai_wyr_0009"
+    "id": "ai_wyr_0009",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Have your search history printed on your shirt",
@@ -155,9 +173,11 @@
     "hash": "f2b9c00e40783ac6540fc68d17f79623345175c2aba75b9d19b7ad9c80fac5bc",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 253,
-    "votes_down": 28,
-    "id": "ai_wyr_0010"
+    "id": "ai_wyr_0010",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Sweat cold gravy whenever you get excited",
@@ -171,9 +191,11 @@
     "hash": "3e109faad9dcfb90b035bd86ffa054a27b47ce4ea5f9eaaa3ec5f2dd9dfb8d56",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 270,
-    "votes_down": 35,
-    "id": "ai_wyr_0011"
+    "id": "ai_wyr_0011",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Accidentally call your boss 'Mommy' every time",
@@ -187,9 +209,11 @@
     "hash": "a6496e487ff04f4fed60c5a7c91b42b1f0e2c1224f04af4fb16b2589c1549580",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 287,
-    "votes_down": 42,
-    "id": "ai_wyr_0012"
+    "id": "ai_wyr_0012",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Experience absolute truth at cost of sanity",
@@ -203,9 +227,11 @@
     "hash": "442252fd3cccadaaa574b79a5d17de99763cb5de8fc2f4db43fa589eff9c3023",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 304,
-    "votes_down": 49,
-    "id": "ai_wyr_0013"
+    "id": "ai_wyr_0013",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Be reborn in a perfect digital utopia",
@@ -219,9 +245,11 @@
     "hash": "eccec2d53bf326cfa48cdf72b6fc181ccc6ae266271d28f64e4ea73df21be9b0",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 321,
-    "votes_down": 11,
-    "id": "ai_wyr_0014"
+    "id": "ai_wyr_0014",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Save humanity but be remembered as a monster",
@@ -235,9 +263,11 @@
     "hash": "f10ba2035867f20361d792cbd41de30facd6d8a935b90e9c6c8fe301fd62f135",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 338,
-    "votes_down": 18,
-    "id": "ai_wyr_0015"
+    "id": "ai_wyr_0015",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Relive your past knowing you cannot change anything",
@@ -251,9 +281,11 @@
     "hash": "394e1c86b3fc4ca5551f4bb205951e51c1a3b7aa60f5e35f67f077f117aa7cf9",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 355,
-    "votes_down": 25,
-    "id": "ai_wyr_0016"
+    "id": "ai_wyr_0016",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Feel everyone's pain as if it were yours",
@@ -267,9 +299,11 @@
     "hash": "1439d4ecb6b42b8f17ffe6e3f9ef36101afa7586fbdf18c69fc8c38b9c086b78",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 372,
-    "votes_down": 32,
-    "id": "ai_wyr_0017"
+    "id": "ai_wyr_0017",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Create a masterpiece you can never share",
@@ -283,9 +317,11 @@
     "hash": "3f6586eafe36b43eb6ab330ae2d35e7ccaec68423d12eadcbbaf4d6ee962c232",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 389,
-    "votes_down": 39,
-    "id": "ai_wyr_0018"
+    "id": "ai_wyr_0018",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Know when the universe will end precisely",
@@ -299,9 +335,11 @@
     "hash": "0bd8b40544910dc3141222cf4163613ea5ba17a147857c4b68fc9c2e6ef2edca",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 406,
-    "votes_down": 46,
-    "id": "ai_wyr_0019"
+    "id": "ai_wyr_0019",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Erase your worst mistake from history entirely",
@@ -315,9 +353,11 @@
     "hash": "c74eb070dc5ea386c477e0c62f2337e20f1049eeccfee4082658dd5659826f35",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 423,
-    "votes_down": 53,
-    "id": "ai_wyr_0020"
+    "id": "ai_wyr_0020",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Live forever alone as an immortal entity",
@@ -331,9 +371,11 @@
     "hash": "097360184ba9bf1ced3a030fa6b0d2ca7e4234bfdaec2564f9ce22481d1b3244",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 440,
-    "votes_down": 15,
-    "id": "ai_wyr_0021"
+    "id": "ai_wyr_0021",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Possess infinite knowledge without any creative power",
@@ -347,9 +389,11 @@
     "hash": "666b9da7a5d1fa5627bac603b1871ac4f30049dad8644673cd2e77667428c56c",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 107,
-    "votes_down": 22,
-    "id": "ai_wyr_0022"
+    "id": "ai_wyr_0022",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Be able to read minds but never speak",
@@ -363,9 +407,11 @@
     "hash": "0380f928b0109cd5d771b2726e6e791bf833d3f20e58ab254ba3b6da250916cb",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 124,
-    "votes_down": 29,
-    "id": "ai_wyr_0023"
+    "id": "ai_wyr_0023",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Sacrifice your soul to eliminate all global suffering",
@@ -379,9 +425,11 @@
     "hash": "297c610e24aa9e9f625a9c262a3f0772cd1eebf0b1e3c7f35bb1065e105955de",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 141,
-    "votes_down": 36,
-    "id": "ai_wyr_0024"
+    "id": "ai_wyr_0024",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Read minds, but only when people dislike you",
@@ -395,9 +443,11 @@
     "hash": "c8f6b95093dc7f50d2b4d7b39b10b40131b873d1ecd2fccea3e3b1e9b137c359",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 158,
-    "votes_down": 43,
-    "id": "ai_wyr_0025"
+    "id": "ai_wyr_0025",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Pause time, but age twice as fast paused",
@@ -411,9 +461,11 @@
     "hash": "e4647fecb1ef42c30cfb49c79d6d88a9ad4b085dd7eeeaf25b100f608181b0e3",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 175,
-    "votes_down": 50,
-    "id": "ai_wyr_0026"
+    "id": "ai_wyr_0026",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Teleport anywhere, but arrive completely naked every time",
@@ -427,9 +479,11 @@
     "hash": "9e1e323de8c336119a1a228f4968e0d4d5db4b178103cc380a9b12d9b2ef7561",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 192,
-    "votes_down": 12,
-    "id": "ai_wyr_0027"
+    "id": "ai_wyr_0027",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Instantly master any language you hear once",
@@ -443,9 +497,11 @@
     "hash": "246b4f1ae1b7f6e348d69afdeeda809e2850f7698594456bd94880a90dde07d5",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 209,
-    "votes_down": 19,
-    "id": "ai_wyr_0028"
+    "id": "ai_wyr_0028",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Have unlimited free Uber rides for life",
@@ -459,10 +515,12 @@
     "hash": "19d5500d8c28755df220763d9f8dfc06f5e20af0c6b7f344db51d8baa130585a",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 226,
-    "votes_down": 26,
     "id": "ai_wyr_0029",
-    "daily_date": "2026-08-19"
+    "daily_date": "2026-08-19",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Never feel tired, but lose ability to dream",
@@ -476,9 +534,11 @@
     "hash": "dbb07b9a7ac0d65034b3e9ef40606f1909f1414d4321c05d4ee7fe1ab6628acd",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 243,
-    "votes_down": 33,
-    "id": "ai_wyr_0030"
+    "id": "ai_wyr_0030",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Work your dream job for minimum wage forever",
@@ -492,9 +552,11 @@
     "hash": "70c959a0d070ff0f683180e42f92371ac1a57b48a2e4ceebf12f4cd0e13d543e",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 260,
-    "votes_down": 40,
-    "id": "ai_wyr_0031"
+    "id": "ai_wyr_0031",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Have 10 million followers, but no real friends",
@@ -508,9 +570,11 @@
     "hash": "5d5ce33899edb87a99a981165073e24c897415aaf8a050c1ace1d3c8a23f73f8",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 277,
-    "votes_down": 47,
-    "id": "ai_wyr_0032"
+    "id": "ai_wyr_0032",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Date a 10 who hates your favorite hobbies",
@@ -524,9 +588,11 @@
     "hash": "50e42dea90099239b4a495616a32692469789e49a23dd35727536a423c3324f0",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 294,
-    "votes_down": 54,
-    "id": "ai_wyr_0033"
+    "id": "ai_wyr_0033",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Know your partner's search history at all times",
@@ -540,9 +606,11 @@
     "hash": "4775b09aad77ea7390dee4e0c899f24f12f8ffdad5b6567df333499787a129b6",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 311,
-    "votes_down": 16,
-    "id": "ai_wyr_0034"
+    "id": "ai_wyr_0034",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Marry your crush, but live in total poverty",
@@ -556,9 +624,11 @@
     "hash": "10424bfc1e96c3719dd5656eb877e6818800b9c882f66224508d919b98f59842",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 328,
-    "votes_down": 23,
-    "id": "ai_wyr_0035"
+    "id": "ai_wyr_0035",
+    "community_votes": {
+      "left": 0,
+      "right": 0
+    }
   },
   {
     "left": "Have a partner who speaks every inner thought",
@@ -572,8 +642,10 @@
     "hash": "5d03fde57660961885b7c1b8686d87552c4c48567310510631184277140ac035",
     "source": "ai_gemini",
     "active": true,
-    "votes_up": 345,
-    "votes_down": 30,
-    "id": "ai_wyr_0036"
+    "id": "ai_wyr_0036",
+    "community_votes": {
+      "left": 1,
+      "right": 1
+    }
   }
 ]

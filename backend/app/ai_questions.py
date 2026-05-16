@@ -165,8 +165,9 @@ JSON format:
                         "hash": q_hash,
                         "source": "ai_gemini",
                         "active": True,
-                        "votes_up": 100 + len(fresh_questions) * 15,
-                        "votes_down": 10 + len(fresh_questions) * 3
+                        # No invented popularity: vote counts start at zero and
+                        # accumulate only from real community votes.
+                        "community_votes": {"left": 0, "right": 0}
                     })
 
                     if len(fresh_questions) >= count:
