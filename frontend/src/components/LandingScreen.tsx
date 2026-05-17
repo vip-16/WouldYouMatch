@@ -1,76 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DailyQuestionCard } from './DailyQuestionCard';
 import { Button } from './ui/Button';
 import { Avatar } from './ui/Avatar';
 import { Chip } from './ui/Chip';
 import { Logo } from './ui/Logo';
+import { API_BASE, apiFetch } from '../services/api';
+import { User } from '../types';
 
 interface LandingScreenProps {
   onFindMatch: () => void;
   onOpenPrivacyPolicy?: () => void;
   onOpenTerms?: () => void;
   onOpenCookieSettings?: () => void;
+  currentUser?: User | null;
 }
 
+interface LeaderboardEntry {
+  rank: number;
+  id: string;
+  alias: string;
+  avatar_seed: string;
+  online: boolean;
+  total_duels: number;
+  avg_synergy: number;
+  best_synergy: number;
+}
+
+// Feature highlights. These describe how the product works — they contain no
+// player names, scores, or activity counts. Live figures are fetched from the API.
 const HERO_SLIDES = [
   {
     id: 'slide_1',
-    communityName: 'Vibe Duel #142',
-    category: 'Twin Flame Match',
-    membersCount: '1,248 online',
-    avatarAlias: 'LunaEcho',
-    avatarSeed: 'seed_cosmic',
+    title: 'Blind dilemma duels',
+    category: 'How it works',
     gradient: 'from-[#800b0b] via-[#9c1414] to-[#1e2022]',
-    badge: '86% Mutual Synergy',
-    tagline: 'Faced off in 7 rapid dilemmas. Agreed on 6 out of 7 impossible moral choices.',
-    participants: ['CosmicWanderer', 'LunaEcho', 'NeonPickle'],
+    badge: '7 rounds · 20s each',
+    tagline: 'You and an opponent lock in choices at the same time. Neither side sees the other pick until both are in.',
   },
   {
     id: 'slide_2',
-    communityName: 'Philosophy Arena',
-    category: 'Late Night High-Stakes',
-    membersCount: '894 online',
-    avatarAlias: 'VortexRider',
-    avatarSeed: 'seed_neon',
+    title: 'True synergy score',
+    category: 'Scoring',
     gradient: 'from-[#1e2022] via-[#3a151b] to-[#800b0b]',
-    badge: '92% Synergy Record',
-    tagline: 'High-frequency philosophical contrasts. Fast 20-second blind voting rounds.',
-    participants: ['VortexRider', 'CyberOtter', 'StarlightFox'],
+    badge: 'Agreement = synergy',
+    tagline: 'Every round you both pick the same side raises your vibe score. The final percentage is your mutual synergy.',
   },
   {
     id: 'slide_3',
-    communityName: 'Unfiltered Debates',
-    category: 'Deep Thought Mode',
-    membersCount: '2,105 online',
-    avatarAlias: 'SolarPanda',
-    avatarSeed: 'seed_solar',
+    title: 'Chat, rematch, befriend',
+    category: 'After the duel',
     gradient: 'from-[#9c1414] via-[#800b0b] to-[#b45309]',
-    badge: '78% Mutual Synergy',
-    tagline: 'Absurd hypotheticals, instant alignment, and zero awkward icebreaker small talk.',
-    participants: ['SolarPanda', 'VelvetDragon', 'WildFalcon'],
+    badge: 'No small talk needed',
+    tagline: 'Post-game chat opens with an icebreaker drawn from the rounds you just played. Rematch or add friends from there.',
   },
 ];
-
-const LEADERBOARD_DATA = {
-  '7days': [
-    { rank: 1, alias: 'Alex Kim', score: '3,842 pts', shift: '+120 pts', level: 9, avatar: 'seed_cosmic' },
-    { rank: 2, alias: 'Morgan Reed', score: '3,110 pts', shift: '+85 pts', level: 8, avatar: 'seed_neon' },
-    { rank: 3, alias: 'Sam Jordan', score: '2,820 pts', shift: '+60 pts', level: 7, avatar: 'seed_solar' },
-    { rank: 4, alias: 'Taylor Chen', score: '1,990 pts', shift: '+40 pts', level: 6, avatar: 'seed_emerald' },
-  ],
-  '30days': [
-    { rank: 1, alias: 'Morgan Reed', score: '14,250 pts', shift: '+410 pts', level: 14, avatar: 'seed_neon' },
-    { rank: 2, alias: 'Alex Kim', score: '12,980 pts', shift: '+350 pts', level: 13, avatar: 'seed_cosmic' },
-    { rank: 3, alias: 'Taylor Chen', score: '10,400 pts', shift: '+220 pts', level: 11, avatar: 'seed_emerald' },
-    { rank: 4, alias: 'Sam Jordan', score: '9,810 pts', shift: '+190 pts', level: 10, avatar: 'seed_solar' },
-  ],
-  'alltime': [
-    { rank: 1, alias: 'Alex Kim', score: '48,120 pts', shift: 'Legend', level: 24, avatar: 'seed_cosmic' },
-    { rank: 2, alias: 'Morgan Reed', score: '42,900 pts', shift: 'Master', level: 21, avatar: 'seed_neon' },
-    { rank: 3, alias: 'Jordan Vance', score: '38,450 pts', shift: 'Diamond', level: 19, avatar: 'seed_cyan' },
-    { rank: 4, alias: 'Sam Jordan', score: '31,200 pts', shift: 'Gold', level: 16, avatar: 'seed_solar' },
-  ],
-};
 
 const FAQ_DATA = [
   {
@@ -110,6 +93,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
   onOpenPrivacyPolicy,
   onOpenTerms,
   onOpenCookieSettings,
+  currentUser,
 }) => {
   // Hero Carousel State
   const [activeSlideIdx, setActiveSlideIdx] = useState(0);
@@ -122,8 +106,57 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
   const [demoSelectedChoice, setDemoSelectedChoice] = useState<'left' | 'right' | null>(null);
   const [demoRevealed, setDemoRevealed] = useState(false);
 
-  // Leaderboard Time Filter State
+  // Leaderboard Time Filter State (real recorded duels only)
   const [leaderboardFilter, setLeaderboardFilter] = useState<'7days' | '30days' | 'alltime'>('7days');
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState(false);
+  const [leaderboardRetry, setLeaderboardRetry] = useState(0);
+  const [onlineCount, setOnlineCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLeaderboardLoading(true);
+    setLeaderboardError(false);
+    apiFetch(`/api/leaderboard?window=${leaderboardFilter}&limit=10`)
+      .then((res) => {
+        if (!res.ok) throw new Error('leaderboard unavailable');
+        return res.json();
+      })
+      .then((data) => {
+        if (!cancelled) {
+          setLeaderboard(data.leaderboard || []);
+          setLeaderboardLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLeaderboard([]);
+          setLeaderboardLoading(false);
+          setLeaderboardError(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [leaderboardFilter, leaderboardRetry]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/api/health`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data && typeof data.users_online === 'number') {
+          setOnlineCount(data.users_online);
+        }
+      })
+      .catch(() => {
+        /* offline count stays hidden when the server is unreachable */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // FAQ Category and Open Items State
   const [faqCategory, setFaqCategory] = useState<string>('General');
@@ -212,10 +245,12 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
             </div>
 
             <div className="flex items-center gap-3 text-[11px] font-mono text-on-surface-variant">
-              <span className="flex items-center gap-1.5 text-tertiary font-bold">
-                <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
-                <span>1,248 dueling live</span>
-              </span>
+              {onlineCount !== null && (
+                <span className="flex items-center gap-1.5 text-tertiary font-bold">
+                  <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
+                  <span>{onlineCount} online now</span>
+                </span>
+              )}
             </div>
           </div>
 
@@ -286,23 +321,15 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
                   </span>
                 </div>
 
-                {/* Card Body with Overlapping Avatar */}
-                <div className="px-5 pb-5 pt-0 flex flex-col items-center text-center relative">
-                  {/* Avatar overlapping seam */}
-                  <div className="-mt-8 mb-2 ring-4 ring-surface-container-lowest rounded-full shadow-elevation-1">
-                    <Avatar alias={activeSlide.avatarAlias} seed={activeSlide.avatarSeed} size="lg" isGradient={true} />
-                  </div>
-
+                {/* Card Body */}
+                <div className="px-5 pb-5 pt-5 flex flex-col items-center text-center relative">
                   <h3 className="font-display font-bold text-lg text-on-surface">
-                    {activeSlide.communityName}
+                    {activeSlide.title}
                   </h3>
 
                   <div className="flex items-center gap-2 mt-1 mb-3">
                     <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">
                       {activeSlide.badge}
-                    </span>
-                    <span className="text-[11px] font-mono text-on-surface-variant">
-                      {activeSlide.membersCount}
                     </span>
                   </div>
 
@@ -423,13 +450,13 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold font-display text-on-surface">LunaEcho</span>
-                  <Avatar alias="LunaEcho" seed="seed_neon" size="sm" isGradient={true} />
+                  <span className="text-xs font-bold font-display text-on-surface">Opponent</span>
+                  <Avatar alias="Opponent" seed="seed_neon" size="sm" isGradient={true} />
                 </div>
               </div>
 
               <span className="text-[11px] font-mono text-on-surface-variant uppercase font-bold tracking-wider mb-2">
-                Interactive Simulator · Click your choice below
+                Interactive Simulator · Simulated opponent · Click your choice below
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full my-2">
@@ -465,33 +492,32 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
               {demoRevealed && (
                 <div className="mt-4 p-3 rounded-xl bg-tertiary/15 border border-tertiary/30 text-tertiary text-xs font-bold flex items-center gap-2 animate-toast">
                   <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                  <span>Both Matched! LunaEcho also chose this option (+1 Synergy Point)</span>
+                  <span>Simulated round — a real opponent's pick is only revealed in a live duel (+1 Synergy Point if you match)</span>
                 </div>
               )}
             </div>
           )}
 
-          {/* TAB 2: LIVE CHAT & VIBE */}
+          {/* TAB 2: POST-GAME CHAT PREVIEW (interface illustration, not a real conversation) */}
           {platformTab === 'chat' && (
             <div className="w-full max-w-xl mx-auto flex flex-col gap-3 animate-fade-in text-left">
+              <span className="text-[11px] font-mono text-on-surface-variant uppercase font-bold tracking-wider">
+                Interface preview · Your real chats appear after a live duel
+              </span>
               <div className="flex items-center justify-between pb-3 border-b border-glass-border">
                 <div className="flex items-center gap-2.5">
-                  <Avatar alias="LunaEcho" seed="seed_neon" size="sm" isGradient={true} />
+                  <Avatar alias="Opponent" seed="seed_neon" size="sm" isGradient={true} />
                   <div>
-                    <span className="text-xs font-bold font-display text-on-surface block leading-tight">LunaEcho</span>
-                    <span className="text-[10px] font-mono text-primary font-bold">86% Synergy · Twin Flames 🔥</span>
+                    <span className="text-xs font-bold font-display text-on-surface block leading-tight">Opponent</span>
+                    <span className="text-[10px] font-mono text-primary font-bold">Synergy shown here after a duel</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-tertiary font-bold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse" />
-                  Active now
-                </span>
               </div>
 
               {/* Message Group */}
               <div className="flex flex-col gap-2 my-2">
                 <div className="flex items-start gap-2.5">
-                  <Avatar alias="LunaEcho" seed="seed_neon" size="sm" className="w-6 h-6" isGradient={true} />
+                  <Avatar alias="Opponent" seed="seed_neon" size="sm" className="w-6 h-6" isGradient={true} />
                   <div className="flex flex-col">
                     <div className="bg-surface-container p-3 rounded-2xl rounded-tl-sm text-xs font-body-md text-on-surface border border-glass-border">
                       Round 3 was completely unhinged! Reading minds only when people hate you is brutal! 😂
@@ -516,7 +542,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
               </div>
 
               <div className="flex items-center gap-2 text-[11px] text-on-surface-variant font-mono italic">
-                <span>LunaEcho is typing</span>
+                <span>Opponent is typing… (preview)</span>
                 <div className="flex gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse delay-100" />
@@ -551,22 +577,47 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
               </div>
 
               <div className="divide-y divide-glass-border/40 border border-glass-border rounded-xl overflow-hidden bg-surface-container-lowest">
-                {LEADERBOARD_DATA[leaderboardFilter].map((row) => (
-                  <div key={row.rank} className="p-3 flex items-center justify-between hover:bg-surface-container/40 transition-colors">
+                {leaderboardLoading && (
+                  <div className="p-6 text-center text-xs font-mono text-on-surface-variant">
+                    Loading recorded standings…
+                  </div>
+                )}
+                {!leaderboardLoading && leaderboardError && (
+                  <div className="p-6 text-center flex flex-col items-center gap-2">
+                    <span className="text-xs text-on-surface-variant">Standings are unavailable right now.</span>
+                    <button
+                      onClick={() => setLeaderboardRetry((n) => n + 1)}
+                      className="text-xs font-bold text-primary hover:underline cursor-pointer"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                )}
+                {!leaderboardLoading && !leaderboardError && leaderboard.length === 0 && (
+                  <div className="p-6 text-center flex flex-col items-center gap-2">
+                    <span className="text-xs font-bold text-on-surface">No ranked duelists yet</span>
+                    <span className="text-xs text-on-surface-variant">No duels have been recorded in this period. Play a duel to claim the top spot.</span>
+                  </div>
+                )}
+                {!leaderboardLoading && !leaderboardError && leaderboard.map((row) => (
+                  <div key={row.id} className="p-3 flex items-center justify-between hover:bg-surface-container/40 transition-colors">
                     <div className="flex items-center gap-3">
                       <span className={`font-mono text-xs font-bold w-5 text-center ${row.rank === 1 ? 'text-amber-400' : 'text-on-surface-variant'}`}>
                         #{row.rank}
                       </span>
-                      <Avatar alias={row.alias} seed={row.avatar} size="sm" isGradient={true} />
+                      <Avatar alias={row.alias} seed={row.avatar_seed} size="sm" isGradient={true} />
                       <div className="flex flex-col">
-                        <span className="font-display font-bold text-xs text-on-surface">{row.alias}</span>
-                        <span className="text-[10px] font-mono text-on-surface-variant">Level {row.level}</span>
+                        <span className="font-display font-bold text-xs text-on-surface flex items-center gap-1.5">
+                          {row.alias}
+                          {row.online && <span className="w-1.5 h-1.5 rounded-full bg-tertiary inline-block" aria-label="online" />}
+                        </span>
+                        <span className="text-[10px] font-mono text-on-surface-variant">{row.total_duels} {row.total_duels === 1 ? 'duel' : 'duels'}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-mono font-bold text-primary">{row.score}</span>
+                      <span className="text-xs font-mono font-bold text-primary">{row.avg_synergy}% avg</span>
                       <span className="text-[10px] font-mono text-tertiary bg-tertiary/10 px-1.5 py-0.2 rounded">
-                        {row.shift}
+                        {row.best_synergy}% best
                       </span>
                     </div>
                   </div>
@@ -575,42 +626,56 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
             </div>
           )}
 
-          {/* TAB 4: YOU SPACE HUB */}
+          {/* TAB 4: YOU SPACE HUB (your real profile, or an invite when unknown) */}
           {platformTab === 'youspace' && (
             <div className="w-full max-w-xl mx-auto flex flex-col gap-4 animate-fade-in text-left">
-              <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 border border-primary/20 flex items-center justify-between">
-                <div className="flex items-center gap-3.5">
-                  <Avatar alias="CosmicRider" seed="seed_cosmic" size="lg" isGradient={true} />
-                  <div>
-                    <span className="font-display font-bold text-base text-on-surface block">CosmicRider</span>
-                    <span className="text-[10px] font-mono font-bold text-primary uppercase tracking-wider">
-                      ⚡ Twin Flame Magnet
-                    </span>
+              {currentUser ? (
+                <>
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 border border-primary/20 flex items-center justify-between">
+                    <div className="flex items-center gap-3.5">
+                      <Avatar alias={currentUser.alias} seed={currentUser.avatar_seed} size="lg" isGradient={true} />
+                      <div>
+                        <span className="font-display font-bold text-base text-on-surface block">{currentUser.alias}</span>
+                        <span className="text-[10px] font-mono font-bold text-primary uppercase tracking-wider">
+                          ⚡ {currentUser.stats?.vibe_archetype || 'Unranked'}
+                        </span>
+                      </div>
+                    </div>
+                    <Chip variant="primary" size="sm">
+                      {currentUser.is_guest ? 'Guest' : 'Member'}
+                    </Chip>
                   </div>
-                </div>
-                <Chip variant="primary" size="sm">
-                  Verified Member
-                </Chip>
-              </div>
 
-              <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
-                  <span className="font-display font-bold text-lg text-primary block">28</span>
-                  <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Duels</span>
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
+                      <span className="font-display font-bold text-lg text-primary block">{currentUser.stats?.total_duels ?? 0}</span>
+                      <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Duels</span>
+                    </div>
+                    <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
+                      <span className="font-display font-bold text-lg text-accent block">{currentUser.stats?.avg_synergy ?? 0}%</span>
+                      <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Avg Vibe</span>
+                    </div>
+                    <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
+                      <span className="font-display font-bold text-lg text-tertiary block">{currentUser.stats?.best_synergy ?? 0}%</span>
+                      <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Best Vibe</span>
+                    </div>
+                    <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
+                      <span className="font-display font-bold text-lg text-on-surface block">{currentUser.stats?.current_streak ?? 0} 🔥</span>
+                      <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Streak</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="p-6 rounded-xl border border-glass-border bg-surface-container text-center flex flex-col items-center gap-3">
+                  <span className="font-display font-bold text-base text-on-surface">Your space is empty</span>
+                  <span className="text-xs text-on-surface-variant max-w-xs">
+                    Enter the arena to create your profile. Your duels, friends, and archetype will appear here.
+                  </span>
+                  <Button variant="primary-gradient" size="sm" onClick={onFindMatch} className="rounded-xl px-5 py-2 text-xs font-bold">
+                    Find a match
+                  </Button>
                 </div>
-                <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
-                  <span className="font-display font-bold text-lg text-accent block">74%</span>
-                  <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Avg Vibe</span>
-                </div>
-                <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
-                  <span className="font-display font-bold text-lg text-tertiary block">100%</span>
-                  <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Best Vibe</span>
-                </div>
-                <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
-                  <span className="font-display font-bold text-lg text-on-surface block">5 🔥</span>
-                  <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Streak</span>
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>
@@ -673,22 +738,17 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
                 Leaderboards that actually track vibe.
               </h3>
               <p className="text-xs font-body-md text-on-surface-variant leading-relaxed mb-6">
-                Rankings based on consistency, win streaks, and mutual synergy. Climb from Curious Explorer to Twin Flame Master.
+                Rankings computed from recorded duels only: average synergy, duel count, and best synergy. No duels yet means no rank.
               </p>
             </div>
 
             <div className="p-3 rounded-xl bg-surface-container border border-glass-border flex flex-col gap-2">
               <div className="flex items-center justify-between text-[11px] font-mono">
-                <span className="font-bold text-on-surface">Top Weekly Duos</span>
-                <span className="text-tertiary">Live Updates</span>
+                <span className="font-bold text-on-surface">How rankings work</span>
+                <span className="text-tertiary">Recorded duels only</span>
               </div>
-              <div className="p-2 rounded-lg bg-surface-container-lowest flex items-center justify-between text-xs">
-                <span className="font-bold text-on-surface">1. Cosmic & Luna</span>
-                <span className="font-mono text-primary font-bold">96% Vibe</span>
-              </div>
-              <div className="p-2 rounded-lg bg-surface-container-lowest flex items-center justify-between text-xs">
-                <span className="font-bold text-on-surface">2. Vortex & Otter</span>
-                <span className="font-mono text-primary font-bold">91% Vibe</span>
+              <div className="p-2 rounded-lg bg-surface-container-lowest text-xs text-on-surface-variant">
+                Live standings appear here once duels have been recorded. Open the leaderboard tab above to see real rankings.
               </div>
             </div>
           </div>
@@ -710,7 +770,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
             <div className="p-3.5 rounded-xl bg-surface-container border border-glass-border flex flex-col gap-2">
               <div className="flex items-center gap-1.5 text-[10px] font-mono text-tertiary font-bold">
                 <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-                <span>AI Generator Active</span>
+                <span>Example dilemma</span>
               </div>
               <p className="text-xs font-body-md text-on-surface leading-snug">
                 "Live in an orbital space station with zero gravity OR an underwater glass dome with glowing sea life?"
@@ -851,7 +911,9 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
           <div className="w-full md:w-64 p-4 rounded-2xl bg-surface-container-lowest border border-glass-border shadow-elevation-2 flex flex-col items-center text-center">
             <Avatar alias="MatchArena" seed="seed_cosmic" size="lg" isGradient={true} className="mb-2 ring-4 ring-primary/20" />
             <span className="font-display font-bold text-sm text-on-surface">WouldYouMatch? Arena</span>
-            <span className="text-[10px] font-mono text-tertiary font-bold mt-0.5">● 1,248 Online Now</span>
+            {onlineCount !== null && (
+              <span className="text-[10px] font-mono text-tertiary font-bold mt-0.5">● {onlineCount} Online Now</span>
+            )}
             <p className="text-[11px] text-on-surface-variant mt-2 mb-3 leading-snug">
               Instant blind reveals & mutual synergy calculations.
             </p>
