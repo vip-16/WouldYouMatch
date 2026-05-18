@@ -138,8 +138,9 @@ export interface DailyQuestion {
   id: string;
   left: string;
   right: string;
-  left_percent: number;
-  right_percent: number;
+  // Null when no real community votes have been recorded yet.
+  left_percent: number | null;
+  right_percent: number | null;
   total_votes: number;
 }
 

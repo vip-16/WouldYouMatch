@@ -12,38 +12,42 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({ onPlayQuic
   const [answeredChoice, setAnsweredChoice] = useState<'left' | 'right' | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
+  const loadDaily = () => {
+    setLoading(true);
     apiFetch(`/api/daily`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('daily unavailable');
+        return res.json();
+      })
       .then((data) => {
         setDaily(data);
         setLoading(false);
       })
       .catch(() => {
-        setDaily({
-          id: 'ai_wyr_0029',
-          left: 'Have unlimited free Uber rides for life',
-          right: 'Have unlimited free First Class flights forever',
-          left_percent: 54,
-          right_percent: 46,
-          total_votes: 3120,
-        });
+        // No invented fallback question: surface the empty state instead.
+        setDaily(null);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadDaily();
   }, []);
 
   const handleAnswer = (choice: 'left' | 'right') => {
     if (answeredChoice || !daily) return;
     setAnsweredChoice(choice);
+    // Single vote path: the answer endpoint records exactly one community vote.
     apiFetch(`/api/daily/answer`, {
       method: 'POST',
       body: JSON.stringify({ question_id: daily.id, choice }),
-    }).catch(() => {});
-    // Also record a persistent vote so Daily results actually move
-    apiFetch(`/api/questions/${daily.id}/vote`, {
-      method: 'POST',
-      body: JSON.stringify({ vote: choice === 'left' ? 'up' : 'down' }),
-    }).catch(() => {});
+    })
+      .then(() => apiFetch(`/api/daily`))
+      .then((res) => (res && res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setDaily(data);
+      })
+      .catch(() => {});
   };
 
   if (loading) {
@@ -57,7 +61,19 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({ onPlayQuic
     );
   }
 
-  if (!daily) return null;
+  if (!daily) {
+    if (loading) return null;
+    return (
+      <div className="glass-surface p-6 rounded-lg flex flex-col items-center justify-center gap-2 min-h-[300px] text-center">
+        <span className="material-symbols-outlined text-[24px] text-on-surface-variant">cloud_off</span>
+        <span className="font-display font-bold text-sm text-on-surface">No daily dilemma right now</span>
+        <span className="text-xs text-on-surface-variant">The dilemma pool is empty. Check back later.</span>
+        <Button variant="secondary-solid" size="sm" onClick={loadDaily} className="mt-1 text-xs">
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-surface p-6 rounded-lg flex flex-col gap-4 shadow-elevation-1 transition-colors duration-150">
@@ -68,7 +84,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({ onPlayQuic
           <span className="font-label-md text-xs font-bold uppercase tracking-wider">Daily Vibe</span>
         </div>
         <span className="font-mono text-xs text-on-surface-variant font-medium">
-          {daily.total_votes.toLocaleString()} votes
+          {daily.total_votes === 0 ? 'No votes yet' : `${daily.total_votes.toLocaleString()} votes`}
         </span>
       </div>
 
@@ -76,6 +92,11 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({ onPlayQuic
       <h3 className="font-display text-lg md:text-xl font-bold text-on-surface text-center leading-snug">
         Would You Rather?
       </h3>
+      {daily.total_votes === 0 && !answeredChoice && (
+        <p className="text-[11px] font-mono text-on-surface-variant text-center -mt-2">
+          No community votes recorded yet — your pick will be the first.
+        </p>
+      )}
 
       {/* Options */}
       <div className="flex flex-col gap-2.5">
@@ -92,12 +113,12 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({ onPlayQuic
           {/* Solid fill indicator */}
           <div
             className="absolute left-0 top-0 bottom-0 bg-primary/15 transition-all duration-500 rounded-l-md"
-            style={{ width: answeredChoice ? `${daily.left_percent}%` : '0%' }}
+            style={{ width: answeredChoice && daily.left_percent !== null ? `${daily.left_percent}%` : '0%' }}
             aria-hidden="true"
           />
           <div className="relative z-10 flex items-center justify-between gap-3">
             <span className="font-body-md text-sm font-medium text-on-surface">{daily.left}</span>
-            {answeredChoice && (
+            {answeredChoice && daily.left_percent !== null && (
               <span className="font-mono text-xs font-bold text-primary shrink-0">
                 {daily.left_percent}%
               </span>
@@ -118,12 +139,12 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({ onPlayQuic
           {/* Solid fill indicator */}
           <div
             className="absolute left-0 top-0 bottom-0 bg-accent/15 transition-all duration-500 rounded-l-md"
-            style={{ width: answeredChoice ? `${daily.right_percent}%` : '0%' }}
+            style={{ width: answeredChoice && daily.right_percent !== null ? `${daily.right_percent}%` : '0%' }}
             aria-hidden="true"
           />
           <div className="relative z-10 flex items-center justify-between gap-3">
             <span className="font-body-md text-sm font-medium text-on-surface">{daily.right}</span>
-            {answeredChoice && (
+            {answeredChoice && daily.right_percent !== null && (
               <span className="font-mono text-xs font-bold text-accent shrink-0">
                 {daily.right_percent}%
               </span>

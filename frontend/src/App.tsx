@@ -201,13 +201,14 @@ export const App: React.FC = () => {
         const data = await res.json();
         if (data.access_token) setAuthToken(data.access_token);
         setUser(data.user);
+        setServerUnreachable(false);
         sessionStorage.setItem('wyrmg_guest_user_id', data.user.id);
         refreshUserProfile(data.user.id);
       } else {
-        createLocalUser();
+        setServerUnreachable(true);
       }
     } catch {
-      createLocalUser();
+      setServerUnreachable(true);
     }
   };
 
@@ -224,14 +225,7 @@ export const App: React.FC = () => {
     }
   };
 
-  const createLocalUser = () => {
-    const localId = `usr_${Math.random().toString(36).substring(2, 10)}`;
-    const adjectives = ['Cosmic', 'Neon', 'Velvet', 'Electric', 'Solar'];
-    const nouns = ['Pickle', 'Vortex', 'Wanderer', 'Otter', 'Panda'];
-    const alias = `${adjectives[Math.floor(Math.random() * adjectives.length)]}${nouns[Math.floor(Math.random() * nouns.length)]}${Math.floor(Math.random() * 90 + 10)}`;
-    setUser({ id: localId, alias, avatar_seed: `seed_${localId}`, role: 'user', is_guest: true });
-    sessionStorage.setItem('wyrmg_guest_user_id', localId);
-  };
+  const [serverUnreachable, setServerUnreachable] = useState<boolean>(false);
 
   const handleLogout = async () => {
     clearAuthToken();
@@ -248,13 +242,14 @@ export const App: React.FC = () => {
         const data = await res.json();
         if (data.access_token) setAuthToken(data.access_token);
         setUser(data.user);
+        setServerUnreachable(false);
         sessionStorage.setItem('wyrmg_guest_user_id', data.user.id);
         refreshUserProfile(data.user.id);
       } else {
-        createLocalUser();
+        setServerUnreachable(true);
       }
     } catch {
-      createLocalUser();
+      setServerUnreachable(true);
     }
   };
 
@@ -434,6 +429,10 @@ export const App: React.FC = () => {
   };
 
   const handleFindMatch = async () => {
+    if (!user?.id) {
+      await fetchInitialUser();
+      if (!userRef.current?.id) return;
+    }
     setStage('queue');
     const connected = await connectWebSocket();
     if (!connected) {
@@ -460,22 +459,9 @@ export const App: React.FC = () => {
   };
 
   const handleSendMessage = (body: string) => {
+    // No fabricated local echo: messages are only sent inside a live match.
+    if (!matchId) return;
     sounds.playMessageSent();
-    if (!matchId) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `msg_${Date.now()}`,
-          room_id: 'mock_room',
-          client_msg_id: `cmsg_${Date.now()}`,
-          sender_id: user?.id || 'me',
-          sender_alias: user?.alias || 'You',
-          body,
-          created_at: Math.floor(Date.now() / 1000),
-        },
-      ]);
-      return;
-    }
     wsClient.send('message.send', {
       match_id: matchId,
       body,
@@ -619,12 +605,28 @@ export const App: React.FC = () => {
       <main className="flex-1 w-full flex flex-col">
         <div key={stage} className="flex-1 w-full flex flex-col animate-screen-enter">
           {stage === 'landing' && (
-            <LandingScreen
-              onFindMatch={handleFindMatch}
-              onOpenPrivacyPolicy={() => navigateTo('/privacy-policy')}
-              onOpenTerms={() => navigateTo('/terms')}
-              onOpenCookieSettings={() => setShowCookieSettings(true)}
-            />
+            <>
+              {serverUnreachable && (
+                <div className="w-full max-w-6xl mx-auto px-4 md:px-6 pt-4">
+                  <Banner
+                    type="warning"
+                    action={{
+                      label: 'Retry',
+                      onClick: fetchInitialUser,
+                    }}
+                  >
+                    Could not reach the WouldYouMatch? server. Your session was not created — please check your connection and retry.
+                  </Banner>
+                </div>
+              )}
+              <LandingScreen
+                onFindMatch={handleFindMatch}
+                onOpenPrivacyPolicy={() => navigateTo('/privacy-policy')}
+                onOpenTerms={() => navigateTo('/terms')}
+                onOpenCookieSettings={() => setShowCookieSettings(true)}
+                currentUser={user}
+              />
+            </>
           )}
 
           {stage === 'queue' && <QueueScreen onCancel={handleCancelQueue} />}
