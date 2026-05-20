@@ -514,12 +514,12 @@ def create_ws_ticket(req: TicketRequest, request: Request):
     client_ip = request.client.host if request.client else "unknown"
     if rate_limiter.is_rate_limited(client_ip, "ws_ticket", max_requests=30, window_seconds=60):
         raise HTTPException(status_code=429, detail="Too many ticket requests.")
-    if req.user_id in engine.users:
-        _require_user(request, req.user_id)
     if req.user_id not in engine.users:
-        user_data = engine.create_guest_user()
-        req.user_id = user_data["user_id"]
-    
+        # Refuse to auto-create phantom guests for stale ids. A revoked or
+        # unknown identity must 401 so clients re-bootstrap their own guest.
+        raise HTTPException(status_code=401, detail="Unknown or inactive user")
+    _require_user(request, req.user_id)
+
     ticket = engine.generate_ws_ticket(req.user_id)
     return {"ticket": ticket, "expires_in": 30}
 
