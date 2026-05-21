@@ -288,7 +288,9 @@ class WouldYouMatchEngine:
     def upgrade_account(self, current_user_id: str, username: str, email: str, password: str) -> Dict[str, Any]:
         username = (username or "").strip()
         email = (email or "").strip()
-        password = (password or "").strip()
+        # Passwords are never stripped: spaces can be intentional and login
+        # verifies the raw value, so hashing a trimmed one would lock users out.
+        password = password or ""
 
         if not username:
             raise ValueError("Username cannot be empty")
