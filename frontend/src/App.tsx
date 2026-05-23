@@ -182,10 +182,21 @@ export const App: React.FC = () => {
           // A legacy localStorage guest must not be reused in a newly opened
           // tab. Registered identities remain persistent across tabs.
           if (!data.is_guest || sessionGuestId) {
+            // A player can press Find Match before React has committed the
+            // state update. Keep the live identity available to that handler.
+            userRef.current = data;
             setUser(data);
             setUnreadDMCount(data.total_unread_messages || 0);
             return;
           }
+        } else if (res.status === 401) {
+          // The cached identity's token died (e.g. backend restart). A dead
+          // guest must not be replayed on the next load — fall through and
+          // mint a fresh one. Registered users simply need to sign in again.
+          clearAuthToken();
+          localStorage.removeItem('wouldyoumatch_user_id');
+          localStorage.removeItem('wyrmg_user_id');
+          sessionStorage.removeItem('wyrmg_guest_user_id');
         }
       } catch (e) {
         console.warn('Could not restore saved session, creating fresh:', e);
