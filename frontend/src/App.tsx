@@ -211,6 +211,9 @@ export const App: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         if (data.access_token) setAuthToken(data.access_token);
+        // Guest creation and matchmaking can happen in the same click. Set
+        // the ref synchronously so connectWebSocket can ticket this guest.
+        userRef.current = data.user;
         setUser(data.user);
         setServerUnreachable(false);
         sessionStorage.setItem('wyrmg_guest_user_id', data.user.id);
@@ -252,6 +255,7 @@ export const App: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         if (data.access_token) setAuthToken(data.access_token);
+        userRef.current = data.user;
         setUser(data.user);
         setServerUnreachable(false);
         sessionStorage.setItem('wyrmg_guest_user_id', data.user.id);
