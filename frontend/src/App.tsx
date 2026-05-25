@@ -286,20 +286,39 @@ export const App: React.FC = () => {
       return true;
     }
     setConnectionStatus('connecting');
-    try {
-      const ticket = await getWsTicket();
-      await wsClient.connect(ticket, {
-        onOpen: () => setConnectionStatus('connected'),
-        onClose: () => setConnectionStatus('disconnected'),
-        getReconnectTicket: getWsTicket,
-      });
-      return true;
-    } catch (e) {
-      console.warn('WS Ticket fetch error:', e);
-      setConnectionStatus('disconnected');
-      return false;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const ticket = await getWsTicket();
+        await wsClient.connect(ticket, {
+          onOpen: () => setConnectionStatus('connected'),
+          onClose: () => setConnectionStatus('disconnected'),
+          getReconnectTicket: getWsTicket,
+        });
+        return true;
+      } catch (e) {
+        const status = (e as { status?: number })?.status;
+        const lastUser = userRef.current;
+        const isGuestTokenRevoked =
+          status === 401 && lastUser?.is_guest === true && attempt === 0;
+        if (isGuestTokenRevoked) {
+          // The backend keeps guest tokens in memory, so a server restart
+          // orphans every cached guest identity. Re-bootstrap a fresh guest
+          // instead of stranding the player back on the landing screen.
+          clearAuthToken();
+          localStorage.removeItem('wouldyoumatch_user_id');
+          localStorage.removeItem('wyrmg_user_id');
+          sessionStorage.removeItem('wyrmg_guest_user_id');
+          await fetchInitialUser();
+          if (userRef.current) continue;
+        }
+        console.warn('WS Ticket fetch error:', e);
+        setConnectionStatus('disconnected');
+        return false;
+      }
     }
-  }, [getWsTicket]);
+    setConnectionStatus('disconnected');
+    return false;
+  }, [getWsTicket, fetchInitialUser]);
 
   const handleServerFrame = useCallback((frame: WSFrame) => {
     const { type, payload } = frame;
