@@ -463,7 +463,7 @@ export const App: React.FC = () => {
   };
 
   const handleFindMatch = async () => {
-    if (!user?.id) {
+    if (!userRef.current?.id) {
       await fetchInitialUser();
       if (!userRef.current?.id) return;
     }
