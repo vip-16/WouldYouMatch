@@ -601,7 +601,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-on-surface relative selection:bg-primary/20">
+    <div className={`${stage === 'landing' ? 'min-h-[100dvh]' : 'h-[100dvh] overflow-hidden'} flex flex-col bg-background text-on-surface relative selection:bg-primary/20`}>
       {/* Top Disconnect Alert Banner */}
       {connectionStatus === 'disconnected' && stage !== 'landing' && (
         <div className="fixed top-0 left-0 right-0 z-50">
@@ -636,8 +636,8 @@ export const App: React.FC = () => {
       )}
 
       {/* Stage Orchestrator */}
-      <main className="flex-1 w-full flex flex-col">
-        <div key={stage} className="flex-1 w-full flex flex-col animate-screen-enter">
+      <main className="flex-1 min-h-0 w-full flex flex-col">
+        <div key={stage} className="flex-1 min-h-0 w-full flex flex-col animate-screen-enter">
           {stage === 'landing' && (
             <>
               {serverUnreachable && (
