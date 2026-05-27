@@ -3,77 +3,77 @@
 @tailwind utilities;
 
 :root {
-  /* Light Mode Palette — PaletteMaker's Deep Crimson Burgundy, Charcoal, & Warm Porcelain */
-  --background: #faf9f7;           /* Warm porcelain / clean ivory paper */
-  --surface: #ffffff;
-  --surface-dim: #f5f3ef;          /* Soft ivory */
+  /* Sunlit mineral palette — soft enough to live in, vivid enough to remember. */
+  --background: #f8f4ed;
+  --surface: #fffdf9;
+  --surface-dim: #f1e9de;
   --surface-bright: #ffffff;
-  --surface-container-lowest: #ffffff;
-  --surface-container-low: #f7f5f1;
-  --surface-container: #ede9e3;    /* Cream beige from budget actuals & table headers */
-  --surface-container-high: #e3ded6;
-  --surface-container-highest: #d6cfc4;
-  --on-surface: #191716;           /* Crisp deep charcoal-black */
-  --on-surface-variant: #59524c;   /* Refined warm stone grey */
+  --surface-container-lowest: #fffdf9;
+  --surface-container-low: #fbf6ee;
+  --surface-container: #f0e7da;
+  --surface-container-high: #e7d9c9;
+  --surface-container-highest: #d9c7b4;
+  --on-surface: #28243a;
+  --on-surface-variant: #6d6575;
   
-  --primary: #800b0b;              /* Deep rich crimson burgundy */
+  --primary: #8d3d78;
   --on-primary: #ffffff;
-  --primary-container: #9c1414;    /* Crimson button/container */
+  --primary-container: #be5c80;
   --on-primary-container: #ffffff;
-  --accent: #1e2022;               /* Deep ink charcoal from budget tracker pills */
-  --accent-dim: #2f343b;
-  --tertiary: #b45309;             /* Warm amber accent */
-  --tertiary-container: #78350f;
+  --accent: #276f7d;
+  --accent-dim: #205966;
+  --tertiary: #d77a36;
+  --tertiary-container: #a95027;
   
   --error: #dc2626;
   --error-container: #fee2e2;
   --on-error-container: #991b1b;
   
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(128, 11, 11, 0.08);
-  --glass-border-hover: rgba(128, 11, 11, 0.18);
+  --glass-bg: rgba(255, 253, 249, 0.76);
+  --glass-border: rgba(91, 57, 76, 0.12);
+  --glass-border-hover: rgba(141, 61, 120, 0.28);
   
   --shadow-elevation-1: 0 1px 3px 0 rgba(25, 23, 22, 0.05), 0 1px 2px -1px rgba(25, 23, 22, 0.03);
-  --shadow-elevation-2: 0 10px 25px -4px rgba(128, 11, 11, 0.08), 0 4px 10px -2px rgba(25, 23, 22, 0.04);
+  --shadow-elevation-2: 0 20px 52px -24px rgba(91, 57, 76, 0.35), 0 8px 18px -10px rgba(31, 57, 62, 0.18);
   
-  --ambient-bg: radial-gradient(circle at 50% 0%, rgba(128, 11, 11, 0.04) 0%, transparent 60%);
+  --ambient-bg: radial-gradient(circle at 6% 4%, rgba(245, 182, 120, 0.3) 0%, transparent 30%), radial-gradient(circle at 92% 18%, rgba(130, 204, 198, 0.24) 0%, transparent 28%), radial-gradient(circle at 54% 92%, rgba(215, 122, 54, 0.12) 0%, transparent 35%);
 }
 
 .dark {
   /* Dark Mode Palette — Deep Obsidian Velvet & Glowing Ruby Crimson */
-  --background: #0e0c0d;           /* Deep obsidian with subtle wine undertone */
-  --surface: #141113;
-  --surface-dim: #100d0f;
-  --surface-bright: #1c171a;
-  --surface-container-lowest: #100d0f;
-  --surface-container-low: #171315;
-  --surface-container: #211b1f;    /* Dark velvet card container */
-  --surface-container-high: #2c2429;
-  --surface-container-highest: #382e34;
-  --on-surface: #fbf7f7;           /* High contrast crisp white */
-  --on-surface-variant: #aca1a6;   /* Soft slate-rose grey */
+  --background: #171526;
+  --surface: #201d31;
+  --surface-dim: #161421;
+  --surface-bright: #29253d;
+  --surface-container-lowest: #201d31;
+  --surface-container-low: #242037;
+  --surface-container: #302b43;
+  --surface-container-high: #3b354e;
+  --surface-container-highest: #4b435d;
+  --on-surface: #fff9f3;
+  --on-surface-variant: #c8bfd0;
   
-  --primary: #c92a2a;              /* Luminous ruby crimson */
+  --primary: #ec8bad;
   --on-primary: #ffffff;
-  --primary-container: #a31919;    /* Deep ruby */
+  --primary-container: #bd5f86;
   --on-primary-container: #ffffff;
-  --accent: #f2e3dc;               /* Soft ivory blush contrast */
-  --accent-dim: #d8c4bc;
-  --tertiary: #f59e0b;             /* Amber gold */
-  --tertiary-container: #b45309;
+  --accent: #82d1cb;
+  --accent-dim: #62aaa7;
+  --tertiary: #f5ad71;
+  --tertiary-container: #c87845;
   
   --error: #f87171;
   --error-container: #450a0a;
   --on-error-container: #fecaca;
   
-  --glass-bg: rgba(20, 17, 19, 0.85);
-  --glass-border: rgba(201, 42, 42, 0.12);
-  --glass-border-hover: rgba(201, 42, 42, 0.25);
+  --glass-bg: rgba(32, 29, 49, 0.76);
+  --glass-border: rgba(255, 242, 232, 0.13);
+  --glass-border-hover: rgba(236, 139, 173, 0.38);
   
   --shadow-elevation-1: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
   --shadow-elevation-2: 0 12px 32px -4px rgba(0, 0, 0, 0.7), 0 4px 12px -2px rgba(128, 11, 11, 0.3);
   
-  --ambient-bg: radial-gradient(circle at 50% 0%, rgba(201, 42, 42, 0.06) 0%, transparent 65%);
+  --ambient-bg: radial-gradient(circle at 4% 6%, rgba(245, 173, 113, 0.15) 0%, transparent 28%), radial-gradient(circle at 94% 18%, rgba(130, 209, 203, 0.15) 0%, transparent 27%), radial-gradient(circle at 50% 100%, rgba(236, 139, 173, 0.12) 0%, transparent 35%);
 }
 
 *, *::before, *::after {
@@ -98,7 +98,7 @@ body {
   background-image: var(--ambient-bg);
   background-attachment: fixed;
   background-repeat: no-repeat;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 /* ── Accessible Focus Visible System ── */
@@ -210,9 +210,10 @@ a:focus:not(:focus-visible) {
 /* ── Strict 1-moment Glassmorphism Classes ── */
 .glass-surface {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(22px) saturate(1.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
   border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-elevation-1);
 }
 
 /* ── Standard Solid Surface ── */
@@ -317,14 +318,6 @@ a:focus:not(:focus-visible) {
   animation: shelfScaleIn 120ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes bounceSubtle {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-}
-.animate-bounce-subtle {
-  animation: bounceSubtle 180ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
 /* Horizontal Fade Mask for scrolling chips */
 .mask-fade-x {
   mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
@@ -380,4 +373,3 @@ a:focus:not(:focus-visible) {
   white-space: nowrap;
   border-width: 0;
 }
-
