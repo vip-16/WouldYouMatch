@@ -85,6 +85,9 @@
 html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -125,6 +128,22 @@ select:focus-visible,
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* ── Mobile: prevent iOS auto-zoom when focusing form fields ── */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Mobile: kill legacy tap-delay / double-tap zoom on controls ── */
+button,
+a,
+[role='button'] {
+  touch-action: manipulation;
 }
 
 /* ── Smooth Screen & View Transition Animations ── */
