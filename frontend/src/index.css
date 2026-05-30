@@ -260,11 +260,34 @@ a,
 
 /* ── Gradient Headline Utility (Allowed on Hero & Brand only) ── */
 .gradient-text-hero {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 45%, var(--accent) 100%);
+  background: linear-gradient(115deg, var(--primary) 0%, var(--primary-container) 48%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ── Organic system: shared across landing, play, conversation and profiles ── */
+.font-display { font-family: 'Quicksand', 'Trebuchet MS', sans-serif; letter-spacing: -0.035em; }
+.organic-page { position: relative; isolation: isolate; overflow: hidden; }
+/* Ambient glows are absolutely positioned inside their own screen (never
+   viewport-fixed): fixed decor inside an overflow:hidden container can shear
+   into a visible full-width seam wherever the container ends. */
+.organic-page::before, .organic-page::after { content: ''; position: absolute; z-index: -1; border-radius: 999px; pointer-events: none; filter: blur(2px); opacity: .8; }
+.organic-page::before { width: 32rem; height: 32rem; background: radial-gradient(circle at 38% 38%, rgba(255, 190, 117, .25), rgba(255, 190, 117, 0) 68%); top: 8%; left: -14rem; }
+.organic-page::after { width: 38rem; height: 38rem; background: radial-gradient(circle at 55% 45%, rgba(83, 183, 180, .2), rgba(83, 183, 180, 0) 68%); top: 22%; right: -18rem; }
+.organic-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--shadow-elevation-2); backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15); }
+.organic-eyebrow { display: inline-flex; align-items: center; gap: .5rem; border: 1px solid var(--glass-border); color: var(--on-surface-variant); background: color-mix(in srgb, var(--surface) 78%, transparent); border-radius: 999px; padding: .45rem .8rem; font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.organic-eyebrow::before { content: ''; width: .45rem; height: .45rem; border-radius: 50% 50% 45% 45%; background: linear-gradient(135deg, var(--tertiary), var(--primary)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent); }
+.organic-blob { position: absolute; z-index: -1; pointer-events: none; border-radius: 48% 52% 42% 58% / 58% 43% 57% 42%; animation: organicDrift 10s ease-in-out infinite alternate; }
+.organic-blob--coral { background: linear-gradient(135deg, rgba(247, 165, 114, .45), rgba(207, 91, 133, .22)); }
+.organic-blob--aqua { background: linear-gradient(135deg, rgba(110, 206, 197, .38), rgba(89, 146, 184, .15)); animation-delay: -4s; }
+.organic-choice { border-radius: 42% 58% 47% 53% / 46% 43% 57% 54%; overflow: hidden; }
+.organic-choice-left { background: linear-gradient(145deg, color-mix(in srgb, var(--primary) 10%, var(--surface-container-lowest)), var(--surface-container-lowest) 60%); }
+.organic-choice-right { background: linear-gradient(215deg, color-mix(in srgb, var(--accent) 11%, var(--surface-container-lowest)), var(--surface-container-lowest) 60%); }
+.organic-choice:hover { transform: translateY(-5px) rotate(-.35deg); }
+.organic-choice-right:hover { transform: translateY(-5px) rotate(.35deg); }
+@keyframes organicDrift { from { transform: translate3d(-8px, -6px, 0) rotate(-5deg) scale(.96); border-radius: 48% 52% 42% 58% / 58% 43% 57% 42%; } to { transform: translate3d(12px, 8px, 0) rotate(7deg) scale(1.05); border-radius: 61% 39% 58% 42% / 41% 57% 43% 59%; } }
+@media (prefers-reduced-motion: reduce) { .organic-blob { animation: none; } .organic-choice:hover, .organic-choice-right:hover { transform: none; } }
 
 /* ── Material Symbols Alignment ── */
 .material-symbols-outlined {
