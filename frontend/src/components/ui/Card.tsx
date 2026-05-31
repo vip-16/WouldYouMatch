@@ -18,7 +18,7 @@ export const Card: React.FC<CardProps> = ({
 
   return (
     <div
-      className={`rounded-lg ${surfaceClass} ${elevationClass} transition-colors duration-150 ${className}`}
+      className={`rounded-[1.75rem] ${surfaceClass} ${elevationClass} transition-colors duration-300 ${className}`}
       {...props}
     >
       {children}
