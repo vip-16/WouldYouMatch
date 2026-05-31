@@ -23,19 +23,18 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  // Base classes with strict 8px / 12px radii, fast 150ms transitions, focus-visible
-  const baseStyles = 'inline-flex items-center justify-center font-label-md font-semibold select-none transition-all duration-150 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none disabled:active:scale-100 cursor-pointer';
+  const baseStyles = 'inline-flex items-center justify-center font-label-md font-semibold select-none transition-all duration-300 ease-out active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none disabled:active:scale-100 cursor-pointer hover:-translate-y-0.5';
 
   const sizeStyles: Record<ButtonSize, string> = {
-    sm: 'h-8 px-3 text-xs rounded-md gap-1.5',
-    md: 'h-10 px-4 text-sm rounded-md gap-2',
-    lg: 'h-12 px-6 text-base rounded-lg gap-2.5',
-    icon: 'w-9 h-9 p-0 rounded-md shrink-0 justify-center',
+    sm: 'h-8 px-3 text-xs rounded-full gap-1.5',
+    md: 'h-10 px-4 text-sm rounded-full gap-2',
+    lg: 'h-12 px-6 text-base rounded-full gap-2.5',
+    icon: 'w-9 h-9 p-0 rounded-full shrink-0 justify-center',
   };
 
   const variantStyles: Record<ButtonVariant, string> = {
-    'primary-gradient': 'bg-gradient-to-r from-primary to-primary-container text-on-primary shadow-elevation-1 hover:brightness-105 active:brightness-95',
-    'secondary-solid': 'bg-surface-container-low hover:bg-surface-container border border-glass-border hover:border-glass-border-hover text-on-surface shadow-elevation-1',
+    'primary-gradient': 'bg-gradient-to-br from-primary via-primary-container to-[#d77a63] text-on-primary shadow-elevation-2 hover:brightness-105 active:brightness-95',
+    'secondary-solid': 'bg-surface-container-low/85 hover:bg-surface-container border border-glass-border hover:border-glass-border-hover text-on-surface shadow-elevation-1',
     'ghost-icon': 'bg-transparent hover:bg-surface-container-high/60 text-on-surface-variant hover:text-on-surface',
     'accent': 'bg-accent hover:bg-accent-dim text-white shadow-elevation-1',
     'danger': 'bg-error/10 hover:bg-error/20 text-error border border-error/20',
