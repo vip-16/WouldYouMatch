@@ -53,8 +53,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-surface/85 dark:bg-surface/80 backdrop-blur-md border-b border-glass-border safe-top transition-colors duration-150">
-      <div className="mx-auto max-w-6xl h-full px-4 md:px-6 flex items-center justify-between">
+    <header className="fixed top-2 left-0 right-0 z-50 h-16 px-2 pt-2 safe-top transition-colors duration-300">
+      <div className="mx-auto max-w-6xl h-full px-3 md:px-5 flex items-center justify-between rounded-full bg-surface/75 backdrop-blur-xl border border-glass-border shadow-elevation-1">
         
         {/* Left: Brand Identity with New Red Logo */}
         <div
