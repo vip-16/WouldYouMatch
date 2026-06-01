@@ -115,7 +115,7 @@ export const ModalShell: React.FC<ModalShellProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-backdrop-fade"
+      className="fixed inset-0 z-50 bg-[#29243a]/45 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-backdrop-fade"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
@@ -125,7 +125,7 @@ export const ModalShell: React.FC<ModalShellProps> = ({
     >
       <div
         style={modalStyle}
-        className={`w-full ${maxWidthStyles[maxWidth] || 'max-w-md'} bg-surface-container-lowest border border-glass-border rounded-2xl shadow-elevation-2 relative animate-modal-pop my-auto ${className || ''}`}
+        className={`w-full ${maxWidthStyles[maxWidth] || 'max-w-md'} bg-surface-container-lowest border border-glass-border rounded-[2.25rem_1.7rem_2.25rem_1.7rem] shadow-elevation-2 relative animate-modal-pop my-auto ${className || ''}`}
       >
         <div ref={contentRef} className={`relative ${bodyClassName !== undefined ? bodyClassName : 'p-5 md:p-6'}`}>
           {/* Close Button */}
