@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { DailyQuestionCard } from './DailyQuestionCard';
 import { Button } from './ui/Button';
-import { Avatar } from './ui/Avatar';
-import { Chip } from './ui/Chip';
 import { Logo } from './ui/Logo';
+import { Avatar } from './ui/Avatar';
+import { DailyQuestionCard } from './DailyQuestionCard';
 import { API_BASE, apiFetch } from '../services/api';
 import { User } from '../types';
 
@@ -26,120 +25,18 @@ interface LeaderboardEntry {
   best_synergy: number;
 }
 
-// Feature highlights. These describe how the product works — they contain no
-// player names, scores, or activity counts. Live figures are fetched from the API.
-const HERO_SLIDES = [
-  {
-    id: 'slide_1',
-    title: 'Blind dilemma duels',
-    category: 'How it works',
-    gradient: 'from-[#800b0b] via-[#9c1414] to-[#1e2022]',
-    badge: '7 rounds · 20s each',
-    tagline: 'You and an opponent lock in choices at the same time. Neither side sees the other pick until both are in.',
-  },
-  {
-    id: 'slide_2',
-    title: 'True synergy score',
-    category: 'Scoring',
-    gradient: 'from-[#1e2022] via-[#3a151b] to-[#800b0b]',
-    badge: 'Agreement = synergy',
-    tagline: 'Every round you both pick the same side raises your vibe score. The final percentage is your mutual synergy.',
-  },
-  {
-    id: 'slide_3',
-    title: 'Chat, rematch, befriend',
-    category: 'After the duel',
-    gradient: 'from-[#9c1414] via-[#800b0b] to-[#b45309]',
-    badge: 'No small talk needed',
-    tagline: 'Post-game chat opens with an icebreaker drawn from the rounds you just played. Rematch or add friends from there.',
-  },
+const steps = [
+  ['01', 'Arrive as you are', 'No profile performance. Just a name, a tiny corner of the internet, and an open mind.'],
+  ['02', 'Choose in sync', 'Seven playful dilemmas, answered at the same time so the moment stays honest.'],
+  ['03', 'Keep the spark', 'See your shared rhythm, then let a private conversation take it from there.'],
 ];
 
-const FAQ_DATA = [
-  {
-    category: 'General',
-    q: 'What is WouldYouMatch?',
-    a: 'WouldYouMatch? is a real-time social icebreaker where two people face off in rapid "Would You Rather" dilemmas to reveal immediate values alignment and mutual synergy without any small talk.',
-  },
-  {
-    category: 'General',
-    q: 'How long does a duel take?',
-    a: 'Each round has a 20-second countdown timer. A full dilemma duel typically concludes in under 90 seconds, immediately unlocking post-game chat and rematch options.',
-  },
-  {
-    category: 'Gameplay & Synergy',
-    q: 'How is the Mutual Synergy score calculated?',
-    a: 'Synergy represents the exact percentage of dilemma choices where you and your opponent locked in the same option. It aggregates across all shared duels to calculate your long-term compatibility.',
-  },
-  {
-    category: 'Gameplay & Synergy',
-    q: 'Can players see my choice before locking in?',
-    a: 'Never. Choices are strictly blind and simultaneous. A subtle indicator appears when your opponent locks in, but choices are only revealed once both players answer or the timer runs out.',
-  },
-  {
-    category: 'Privacy & Accounts',
-    q: 'Do I need to create an account to play?',
-    a: 'No! You can play immediately as a guest with an anonymous alias. When you want to save friends or message history, a soft 1-click upgrade attaches your history to a permanent account.',
-  },
-  {
-    category: 'Privacy & Accounts',
-    q: 'Is WouldYouMatch? free to play?',
-    a: 'Yes, WouldYouMatch? is completely free during public beta. All features—including live duels, post-game private chat, 1:1 direct messages, and personality archetype stats—are 100% unlocked.',
-  },
-];
-
-export const LandingScreen: React.FC<LandingScreenProps> = ({
-  onFindMatch,
-  onOpenPrivacyPolicy,
-  onOpenTerms,
-  onOpenCookieSettings,
-  currentUser,
-}) => {
-  // Hero Carousel State
-  const [activeSlideIdx, setActiveSlideIdx] = useState(0);
-  const activeSlide = HERO_SLIDES[activeSlideIdx];
-
-  // Platform Feature Tab State
-  const [platformTab, setPlatformTab] = useState<'arena' | 'chat' | 'leaderboard' | 'youspace'>('arena');
-
-  // Interactive Duel Demo State inside the "Arena" tab
-  const [demoSelectedChoice, setDemoSelectedChoice] = useState<'left' | 'right' | null>(null);
-  const [demoRevealed, setDemoRevealed] = useState(false);
-
-  // Leaderboard Time Filter State (real recorded duels only)
-  const [leaderboardFilter, setLeaderboardFilter] = useState<'7days' | '30days' | 'alltime'>('7days');
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
-  const [leaderboardError, setLeaderboardError] = useState(false);
-  const [leaderboardRetry, setLeaderboardRetry] = useState(0);
+export const LandingScreen: React.FC<LandingScreenProps> = ({ onFindMatch, onOpenPrivacyPolicy, onOpenTerms, onOpenCookieSettings, currentUser }) => {
+  // Live room data — only real recorded platform activity, never invented.
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLeaderboardLoading(true);
-    setLeaderboardError(false);
-    apiFetch(`/api/leaderboard?window=${leaderboardFilter}&limit=10`)
-      .then((res) => {
-        if (!res.ok) throw new Error('leaderboard unavailable');
-        return res.json();
-      })
-      .then((data) => {
-        if (!cancelled) {
-          setLeaderboard(data.leaderboard || []);
-          setLeaderboardLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setLeaderboard([]);
-          setLeaderboardLoading(false);
-          setLeaderboardError(true);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [leaderboardFilter, leaderboardRetry]);
+  const [activeMatches, setActiveMatches] = useState<number | null>(null);
+  const [leaders, setLeaders] = useState<LeaderboardEntry[]>([]);
+  const [leadersState, setLeadersState] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
 
   useEffect(() => {
     let cancelled = false;
@@ -148,841 +45,142 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
       .then((data) => {
         if (!cancelled && data && typeof data.users_online === 'number') {
           setOnlineCount(data.users_online);
+          setActiveMatches(typeof data.active_matches === 'number' ? data.active_matches : null);
         }
       })
       .catch(() => {
-        /* offline count stays hidden when the server is unreachable */
+        /* live figures stay hidden when the server is unreachable */
+      });
+    apiFetch('/api/leaderboard?window=7days&limit=5')
+      .then((res) => {
+        if (!res.ok) throw new Error('leaderboard unavailable');
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const rows = data.leaderboard || [];
+        setLeaders(rows);
+        setLeadersState(rows.length > 0 ? 'ready' : 'empty');
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLeaders([]);
+          setLeadersState('error');
+        }
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // FAQ Category and Open Items State
-  const [faqCategory, setFaqCategory] = useState<string>('General');
-  const [openFaqIndices, setOpenFaqIndices] = useState<number[]>([0]);
-
-  const toggleFaq = (idx: number) => {
-    setOpenFaqIndices((prev) =>
-      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
-    );
-  };
-
-  const handleDemoChoice = (choice: 'left' | 'right') => {
-    setDemoSelectedChoice(choice);
-    setTimeout(() => {
-      setDemoRevealed(true);
-    }, 600);
-  };
-
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    el?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const filteredFaqs = FAQ_DATA.filter((f) => f.category === faqCategory);
-
   return (
-    <div className="w-full flex flex-col items-center overflow-x-hidden pt-20 pb-16">
-      
-      {/* ════════════════════════════════════════════════════════════════════════
-          1. HERO SECTION (With Interactive App Window Showcase)
-      ════════════════════════════════════════════════════════════════════════ */}
-      <section className="w-full max-w-6xl px-4 md:px-6 pt-8 md:pt-14 pb-16 flex flex-col items-center text-center">
-        
-        {/* Category Pill Tag */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high/80 border border-glass-border text-on-surface text-xs font-mono font-semibold mb-6 animate-fade-in shadow-elevation-1">
-          <span className="text-primary font-bold">✦</span>
-          <span>Instant Values Compatibility</span>
-        </div>
+  <main className="organic-page min-h-[100dvh] pt-14">
+    <div className="organic-blob organic-blob--coral w-72 h-72 -top-20 right-[10%] opacity-80" aria-hidden="true" />
+    <div className="organic-blob organic-blob--aqua w-64 h-64 top-[42rem] -left-28 opacity-70" aria-hidden="true" />
 
-        {/* Main Hero Headline */}
-        <h1 className="font-display text-4xl sm:text-6xl lg:text-[68px] font-bold leading-[1.08] tracking-tight text-on-surface max-w-4xl">
-          Meet someone through <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-primary via-primary-container to-accent bg-clip-text text-transparent">
-            seven impossible choices.
-          </span>
-        </h1>
-
-        {/* Body Description */}
-        <p className="font-body-md text-base sm:text-lg text-on-surface-variant leading-relaxed max-w-2xl mt-5 mb-8">
-          Skip the dry small talk. Face off in rapid, real-time "Would You Rather" dilemmas against a stranger and discover instant compatibility in under 90 seconds.
-        </p>
-
-        {/* Action Button Group with Single Unambiguous Primary CTA */}
-        <div className="flex flex-wrap items-center justify-center gap-3.5 mb-14">
-          <Button
-            variant="primary-gradient"
-            size="lg"
-            onClick={onFindMatch}
-            rightIcon="arrow_forward"
-            className="rounded-full px-8 py-3.5 text-base font-bold shadow-elevation-2 ring-2 ring-primary/40 hover:ring-primary/80 hover:scale-105 active:scale-95 transition-all animate-pulse-subtle cursor-pointer"
-          >
-            Start Dilemma Duel — Free
-          </Button>
-          <Button
-            variant="secondary-solid"
-            size="lg"
-            onClick={() => scrollToSection('features')}
-            className="rounded-full px-6 py-3 text-sm font-semibold opacity-90 hover:opacity-100 cursor-pointer"
-          >
-            How It Works
-          </Button>
-        </div>
-
-        {/* ── Embedded App Showcase Window (Exact Video Mockup) ── */}
-        <div className="w-full max-w-4xl bg-surface-container-lowest/90 border border-glass-border rounded-2xl shadow-elevation-2 overflow-hidden flex flex-col text-left transition-all backdrop-blur-sm">
-          
-          {/* Mockup Window Header Bar */}
-          <div className="h-10 px-4 border-b border-glass-border/60 bg-surface-container-low/80 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-error/70" />
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-400/70" />
-              <div className="w-2.5 h-2.5 rounded-full bg-tertiary/70" />
-              <span className="text-[11px] font-mono text-on-surface-variant ml-2 hidden sm:inline">
-                wouldyoumatch.app/arena/live-vibe
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 text-[11px] font-mono text-on-surface-variant">
-              {onlineCount !== null && (
-                <span className="flex items-center gap-1.5 text-tertiary font-bold">
-                  <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
-                  <span>{onlineCount} online now</span>
-                </span>
-              )}
-            </div>
+    <section className="relative mx-auto flex min-h-[min(760px,100dvh)] max-w-6xl items-center px-5 py-14 md:px-8 md:py-20">
+      <div className="grid w-full items-center gap-12 lg:grid-cols-[1.02fr_.98fr] lg:gap-16">
+        <div className="relative z-10 max-w-xl animate-screen-enter">
+          <span className="organic-eyebrow">A social game for chance chemistry</span>
+          <h1 className="font-display mt-6 text-5xl font-bold leading-[.94] tracking-[-.06em] text-on-surface sm:text-6xl md:text-7xl">Seven choices.<span className="gradient-text-hero block pt-2">One unexpected hello.</span></h1>
+          <p className="mt-7 max-w-md text-base leading-relaxed text-on-surface-variant md:text-lg">WouldYouMatch? turns impossible little questions into a real place to begin. Find someone, pick a side, discover the rhythm you share.</p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button variant="primary-gradient" size="lg" onClick={onFindMatch} rightIcon="arrow_forward" className="rounded-full px-7 shadow-elevation-2">Find a match</Button>
+            <button onClick={() => document.getElementById('how-it-feels')?.scrollIntoView({ behavior: 'smooth' })} className="rounded-full px-5 py-3 text-sm font-semibold text-on-surface-variant transition-colors hover:text-on-surface">See how it feels <span aria-hidden="true">↓</span></button>
           </div>
+          <div className="mt-9 flex items-center gap-3 text-xs text-on-surface-variant"><div className="flex -space-x-2" aria-hidden="true">{['#eea177', '#73bdb9', '#bd658b'].map((color) => <span key={color} className="h-7 w-7 rounded-full border-2 border-background" style={{ background: color }} />)}</div><span>Private by default. Human on purpose.</span></div>
+        </div>
 
-          {/* Mockup Window Body (Sidebar + Dynamic Community Card) */}
-          <div className="flex flex-col md:flex-row min-h-[380px]">
-            
-            {/* Left App Sidebar */}
-            <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-glass-border/60 p-4 flex flex-col gap-4 bg-surface-container-low/40 shrink-0">
-              {/* Search trigger */}
-              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-lowest border border-glass-border text-xs text-on-surface-variant font-body-md">
-                <span className="material-symbols-outlined text-[16px]">search</span>
-                <span>Search arena…</span>
-              </div>
-
-              {/* Sidebar Menu */}
-              <div className="flex flex-col gap-1">
-                {[
-                  { icon: 'dashboard', label: 'Overview', active: true },
-                  { icon: 'sports_esports', label: 'Duel Arena', active: false },
-                  { icon: 'chat', label: 'Live Chat', active: false },
-                  { icon: 'insights', label: 'Leaderboard', active: false },
-                  { icon: 'group', label: 'Friends', active: false },
-                  { icon: 'account_circle', label: 'You Space', active: false },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-label-md transition-colors cursor-pointer ${
-                      item.active
-                        ? 'bg-surface-container font-bold text-primary'
-                        : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[16px]">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Categories Sublist */}
-              <div className="mt-auto pt-2 border-t border-glass-border/40 flex flex-col gap-1">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant font-bold px-2">
-                  Dilemma Packs
-                </span>
-                <span className="text-[11px] font-body-md text-on-surface-variant px-2 py-0.5 truncate hover:text-on-surface cursor-pointer">
-                  ✦ Moral Dilemmas
-                </span>
-                <span className="text-[11px] font-body-md text-on-surface-variant px-2 py-0.5 truncate hover:text-on-surface cursor-pointer">
-                  ✦ Wild & Chaotic
-                </span>
-                <span className="text-[11px] font-body-md text-on-surface-variant px-2 py-0.5 truncate hover:text-on-surface cursor-pointer">
-                  ✦ Food & Lifestyle
-                </span>
-              </div>
-            </div>
-
-            {/* Right Dynamic Card Showcase */}
-            <div className="flex-1 p-6 md:p-8 flex flex-col justify-center items-center relative overflow-hidden bg-gradient-to-br from-surface-container-lowest via-surface-container-low to-primary/5">
-              
-              {/* Dynamic Community Preview Card */}
-              <div className="w-full max-w-md rounded-2xl border border-glass-border bg-surface-container-lowest shadow-elevation-2 overflow-hidden flex flex-col transition-all">
-                
-                {/* Banner Gradient Header */}
-                <div className={`h-28 w-full bg-gradient-to-br ${activeSlide.gradient} relative flex items-center justify-center p-4`}>
-                  {/* Subtle decorative mesh overlay */}
-                  <div className="absolute inset-0 bg-black/15 backdrop-blur-[1px]" />
-                  <span className="relative z-10 text-xs font-mono font-bold uppercase tracking-widest text-white/90 bg-black/30 px-3 py-1 rounded-full border border-white/20">
-                    {activeSlide.category}
-                  </span>
-                </div>
-
-                {/* Card Body */}
-                <div className="px-5 pb-5 pt-5 flex flex-col items-center text-center relative">
-                  <h3 className="font-display font-bold text-lg text-on-surface">
-                    {activeSlide.title}
-                  </h3>
-
-                  <div className="flex items-center gap-2 mt-1 mb-3">
-                    <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">
-                      {activeSlide.badge}
-                    </span>
-                  </div>
-
-                  <p className="text-xs font-body-md text-on-surface-variant leading-relaxed mb-4 max-w-xs">
-                    {activeSlide.tagline}
-                  </p>
-
-                  <Button
-                    variant="primary-gradient"
-                    size="sm"
-                    onClick={onFindMatch}
-                    className="w-full rounded-xl py-2 font-bold shadow-elevation-1 text-xs"
-                    rightIcon="play_arrow"
-                  >
-                    Join Duel Now
-                  </Button>
-                </div>
-              </div>
-
-              {/* Carousel Slide Indicators */}
-              <div className="flex items-center gap-2 mt-5">
-                {HERO_SLIDES.map((s, idx) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setActiveSlideIdx(idx)}
-                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                      activeSlideIdx === idx ? 'w-6 bg-primary' : 'w-2 bg-on-surface-variant/40 hover:bg-on-surface-variant'
-                    }`}
-                    aria-label={`Show slide ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
+        <div className="relative mx-auto w-full max-w-md lg:max-w-none animate-screen-enter" style={{ animationDelay: '90ms' }}>
+          <div className="organic-panel relative overflow-hidden rounded-[3rem_2rem_3.5rem_2.25rem] p-5 sm:p-7">
+            <div className="absolute -right-10 -top-12 h-40 w-40 rounded-[45%_55%_65%_35%] bg-primary/15" aria-hidden="true" />
+            <div className="relative flex items-center justify-between"><div><p className="text-[11px] font-bold uppercase tracking-[.14em] text-on-surface-variant">Your first spark</p><p className="mt-1 font-display text-xl font-bold text-on-surface">A question for two</p></div><div className="flex h-10 w-10 items-center justify-center rounded-[45%_55%_48%_52%] bg-tertiary/20 text-tertiary"><span className="material-symbols-outlined">flare</span></div></div>
+            <div className="mt-9 text-center"><p className="font-display text-2xl font-bold leading-tight text-on-surface sm:text-3xl">Would you rather…</p><p className="mx-auto mt-4 max-w-xs text-sm leading-relaxed text-on-surface-variant">wake up somewhere entirely new, or see your favourite place with fresh eyes?</p></div>
+            <div className="mt-8 grid grid-cols-2 gap-3"><div className="rounded-[2rem_1.4rem_2.2rem_1.3rem] border border-primary/20 bg-primary/10 px-4 py-5 text-center text-sm font-bold text-primary">Somewhere new</div><div className="rounded-[1.4rem_2rem_1.3rem_2.2rem] border border-accent/20 bg-accent/10 px-4 py-5 text-center text-sm font-bold text-accent">Fresh eyes</div></div>
+            <div className="mt-7 flex items-center justify-center gap-2 text-xs font-medium text-on-surface-variant"><span className="h-2 w-2 animate-pulse rounded-full bg-tertiary" /> both answers reveal together</div>
           </div>
+          <div className="organic-panel absolute -bottom-7 -left-5 rounded-[1.7rem_1.2rem_1.7rem_1.2rem] px-4 py-3 text-xs font-semibold text-on-surface shadow-elevation-2 sm:-left-8"><span className="mr-1 text-tertiary">✦</span> no awkward opening line</div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      {/* ════════════════════════════════════════════════════════════════════════
-          2. EDITORIAL VALUE PROPOSITION STATEMENT
-      ════════════════════════════════════════════════════════════════════════ */}
-      <section id="about" className="w-full max-w-4xl px-4 md:px-6 py-12 md:py-16 flex flex-col items-start text-left border-t border-glass-border">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-glass-border text-xs font-mono font-bold text-on-surface mb-6">
-          <span className="text-accent font-bold">+</span>
-          <span>Zero Small Talk</span>
-        </div>
+    <section id="how-it-feels" className="relative mx-auto max-w-6xl px-5 py-20 md:px-8 md:py-28">
+      <div className="max-w-2xl"><span className="organic-eyebrow">Designed for a softer start</span><h2 className="font-display mt-5 text-4xl font-bold leading-tight tracking-[-.05em] text-on-surface md:text-5xl">Less scrolling. More serendipity.</h2></div>
+      <div className="mt-12 grid gap-5 md:grid-cols-3">{steps.map(([number, title, copy], index) => <article key={number} className="organic-panel rounded-[2.5rem_1.6rem_2.1rem_1.8rem] p-7 transition-transform duration-300 hover:-translate-y-1" style={{ transform: index === 1 ? 'translateY(1.25rem)' : undefined }}><span className="font-display text-3xl font-bold text-primary/65">{number}</span><h3 className="font-display mt-8 text-xl font-bold text-on-surface">{title}</h3><p className="mt-3 text-sm leading-relaxed text-on-surface-variant">{copy}</p></article>)}</div>
+    </section>
 
-        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold leading-snug text-on-surface max-w-3xl">
-          Seven dilemmas is all it takes. WouldYouMatch? is a real-time social arena built for curious minds, creators, and night owls to connect without awkward filler.
-        </h2>
+    <section className="mx-auto grid max-w-6xl gap-10 px-5 py-12 md:grid-cols-[.8fr_1.2fr] md:px-8 md:py-24">
+      <div className="self-center"><span className="organic-eyebrow">Today’s small dilemma</span><h2 className="font-display mt-5 text-4xl font-bold tracking-[-.05em] text-on-surface">Try the room on for size.</h2><p className="mt-4 max-w-sm text-sm leading-relaxed text-on-surface-variant">One question, shared with everyone who drops by today. Choose your side, then step into a match when you’re ready.</p>{currentUser?.alias && <p className="mt-6 text-sm font-semibold text-primary">Welcome back, {currentUser.alias}.</p>}</div>
+      <div className="mx-auto w-full max-w-xl"><DailyQuestionCard onPlayQuickMatch={onFindMatch} /></div>
+    </section>
 
-        <p className="font-body-md text-base md:text-lg text-on-surface-variant leading-relaxed max-w-2xl mt-4">
-          Skip days of surface-level texting. In under 90 seconds, you face high-stakes ethical puzzles and chaotic hypotheticals simultaneously. When the dust settles, your mutual synergy reveals exactly who you’re talking to.
-        </p>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════════════
-          3. MULTI-TAB PLATFORM SHOWCASE ("One platform to discover your vibe")
-      ════════════════════════════════════════════════════════════════════════ */}
-      <section id="features" className="w-full max-w-6xl px-4 md:px-6 py-16 flex flex-col items-center">
-        
-        {/* Section Tag & Split Heading */}
-        <div className="w-full flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-10 text-left">
+    <section id="rankings" className="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-16">
+      <div className="organic-panel relative overflow-hidden rounded-[2.5rem_1.8rem_2.5rem_1.8rem] p-7 sm:p-9">
+        <div className="absolute -left-12 -bottom-14 h-44 w-44 rounded-[55%_45%_60%_40%] bg-accent/10" aria-hidden="true" />
+        <div className="relative grid gap-8 md:grid-cols-[.9fr_1.1fr] md:items-start">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-glass-border text-xs font-mono font-bold text-on-surface mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              <span>Core Gameplay</span>
-            </div>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold text-on-surface">
-              One platform to discover <br className="hidden sm:inline" />
-              your true vibe alignment.
-            </h2>
-          </div>
-          <p className="font-body-md text-sm md:text-base text-on-surface-variant max-w-md">
-            Fast blind choices, instant chord harmonies, Discord-grade post-game chat, and persistent friend direct messaging—all synchronized over WebSockets.
-          </p>
-        </div>
-
-        {/* Symmetric Platform Feature Tabs (Grid for zero clipping & clean alignment) */}
-        <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2 border-b border-glass-border pb-2 mb-6">
-          {[
-            { id: 'arena', label: 'Duel Arena', icon: 'sports_esports' },
-            { id: 'chat', label: 'Live Chat', icon: 'chat' },
-            { id: 'leaderboard', label: 'Leaderboard', icon: 'insights' },
-            { id: 'youspace', label: 'You Space', icon: 'account_circle' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setPlatformTab(tab.id as any)}
-              className={`flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-label-md font-bold uppercase tracking-wider transition-all cursor-pointer rounded-lg border-b-2 ${
-                platformTab === tab.id
-                  ? 'border-primary text-primary bg-primary/10 shadow-elevation-1'
-                  : 'border-transparent text-on-surface-variant hover:text-on-surface hover:bg-surface-container/40'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px] shrink-0">{tab.icon}</span>
-              <span className="truncate">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* ── Interactive Tab Viewport ── */}
-        <div className="w-full rounded-2xl border border-glass-border bg-surface-container-lowest shadow-elevation-2 p-5 sm:p-8 min-h-[420px] flex flex-col justify-center transition-all">
-          
-          {/* TAB 1: DUEL ARENA INTERACTIVE DEMO */}
-          {platformTab === 'arena' && (
-            <div className="w-full max-w-2xl mx-auto flex flex-col items-center text-center animate-fade-in">
-              <div className="flex items-center justify-between w-full mb-4 px-2">
-                <div className="flex items-center gap-2">
-                  <Avatar alias="You" seed="seed_cosmic" size="sm" isGradient={true} />
-                  <span className="text-xs font-bold font-display text-on-surface">You</span>
+            <span className="organic-eyebrow">The room right now</span>
+            <h2 className="font-display mt-5 text-3xl font-bold tracking-[-.05em] text-on-surface md:text-4xl">Alive, right this second.</h2>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-on-surface-variant">Live figures from this server — nothing staged, nothing estimated.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {onlineCount !== null ? (
+                <div className="flex items-center gap-2 rounded-full border border-glass-border bg-surface-container-lowest px-4 py-2 text-xs font-bold text-on-surface">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-tertiary" />
+                  {onlineCount} online now
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold bg-primary/15 text-primary px-2.5 py-0.5 rounded-full">
-                    ROUND 3 OF 7
-                  </span>
-                  <span className="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center font-mono text-xs font-bold text-primary">
-                    14s
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold font-display text-on-surface">Opponent</span>
-                  <Avatar alias="Opponent" seed="seed_neon" size="sm" isGradient={true} />
-                </div>
-              </div>
-
-              <span className="text-[11px] font-mono text-on-surface-variant uppercase font-bold tracking-wider mb-2">
-                Interactive Simulator · Simulated opponent · Click your choice below
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full my-2">
-                <button
-                  onClick={() => handleDemoChoice('left')}
-                  className={`p-5 rounded-xl border text-left flex flex-col justify-between min-h-[110px] transition-all cursor-pointer ${
-                    demoSelectedChoice === 'left'
-                      ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
-                      : 'border-glass-border bg-surface-container hover:border-glass-border-hover'
-                  }`}
-                >
-                  <span className="font-mono text-[10px] font-bold text-primary">OPTION A</span>
-                  <span className="font-display font-bold text-sm text-on-surface">
-                    Read minds, but only when people dislike you
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleDemoChoice('right')}
-                  className={`p-5 rounded-xl border text-left flex flex-col justify-between min-h-[110px] transition-all cursor-pointer ${
-                    demoSelectedChoice === 'right'
-                      ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
-                      : 'border-glass-border bg-surface-container hover:border-glass-border-hover'
-                  }`}
-                >
-                  <span className="font-mono text-[10px] font-bold text-primary">OPTION B</span>
-                  <span className="font-display font-bold text-sm text-on-surface">
-                    See the future, but forget it immediately after
-                  </span>
-                </button>
-              </div>
-
-              {demoRevealed && (
-                <div className="mt-4 p-3 rounded-xl bg-tertiary/15 border border-tertiary/30 text-tertiary text-xs font-bold flex items-center gap-2 animate-toast">
-                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                  <span>Simulated round — a real opponent's pick is only revealed in a live duel (+1 Synergy Point if you match)</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: POST-GAME CHAT PREVIEW (interface illustration, not a real conversation) */}
-          {platformTab === 'chat' && (
-            <div className="w-full max-w-xl mx-auto flex flex-col gap-3 animate-fade-in text-left">
-              <span className="text-[11px] font-mono text-on-surface-variant uppercase font-bold tracking-wider">
-                Interface preview · Your real chats appear after a live duel
-              </span>
-              <div className="flex items-center justify-between pb-3 border-b border-glass-border">
-                <div className="flex items-center gap-2.5">
-                  <Avatar alias="Opponent" seed="seed_neon" size="sm" isGradient={true} />
-                  <div>
-                    <span className="text-xs font-bold font-display text-on-surface block leading-tight">Opponent</span>
-                    <span className="text-[10px] font-mono text-primary font-bold">Synergy shown here after a duel</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Message Group */}
-              <div className="flex flex-col gap-2 my-2">
-                <div className="flex items-start gap-2.5">
-                  <Avatar alias="Opponent" seed="seed_neon" size="sm" className="w-6 h-6" isGradient={true} />
-                  <div className="flex flex-col">
-                    <div className="bg-surface-container p-3 rounded-2xl rounded-tl-sm text-xs font-body-md text-on-surface border border-glass-border">
-                      Round 3 was completely unhinged! Reading minds only when people hate you is brutal! 😂
-                    </div>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-[10px] font-mono bg-primary/10 text-primary px-2 py-0.2 rounded-full border border-primary/20">
-                        🔥 2
-                      </span>
-                      <span className="text-[10px] font-mono bg-surface-container text-on-surface-variant px-2 py-0.2 rounded-full">
-                        😂 4
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end">
-                  <div className="bg-primary/20 border border-primary/30 p-3 rounded-2xl rounded-tr-sm text-xs font-body-md text-on-surface max-w-[80%]">
-                    I know right! But seeing the future and immediately forgetting it would drive me crazy 🔮
-                  </div>
-                  <span className="text-[9px] font-mono text-on-surface-variant mt-0.5">Sent ✓</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-[11px] text-on-surface-variant font-mono italic">
-                <span>Opponent is typing… (preview)</span>
-                <div className="flex gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse delay-100" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse delay-200" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: LEADERBOARD & STREAKS */}
-          {platformTab === 'leaderboard' && (
-            <div className="w-full max-w-xl mx-auto flex flex-col gap-3 animate-fade-in text-left">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-label-md font-bold uppercase tracking-wider text-on-surface-variant">
-                  Global Vibe Standings
-                </span>
-                <div className="flex gap-1 bg-surface-container p-1 rounded-lg border border-glass-border">
-                  {(['7days', '30days', 'alltime'] as const).map((filter) => (
-                    <button
-                      key={filter}
-                      onClick={() => setLeaderboardFilter(filter)}
-                      className={`px-2.5 py-1 text-[10px] font-mono font-bold uppercase rounded-md transition-all cursor-pointer ${
-                        leaderboardFilter === filter
-                          ? 'bg-primary text-white shadow-elevation-1'
-                          : 'text-on-surface-variant hover:text-on-surface'
-                      }`}
-                    >
-                      {filter}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="divide-y divide-glass-border/40 border border-glass-border rounded-xl overflow-hidden bg-surface-container-lowest">
-                {leaderboardLoading && (
-                  <div className="p-6 text-center text-xs font-mono text-on-surface-variant">
-                    Loading recorded standings…
-                  </div>
-                )}
-                {!leaderboardLoading && leaderboardError && (
-                  <div className="p-6 text-center flex flex-col items-center gap-2">
-                    <span className="text-xs text-on-surface-variant">Standings are unavailable right now.</span>
-                    <button
-                      onClick={() => setLeaderboardRetry((n) => n + 1)}
-                      className="text-xs font-bold text-primary hover:underline cursor-pointer"
-                    >
-                      Try again
-                    </button>
-                  </div>
-                )}
-                {!leaderboardLoading && !leaderboardError && leaderboard.length === 0 && (
-                  <div className="p-6 text-center flex flex-col items-center gap-2">
-                    <span className="text-xs font-bold text-on-surface">No ranked duelists yet</span>
-                    <span className="text-xs text-on-surface-variant">No duels have been recorded in this period. Play a duel to claim the top spot.</span>
-                  </div>
-                )}
-                {!leaderboardLoading && !leaderboardError && leaderboard.map((row) => (
-                  <div key={row.id} className="p-3 flex items-center justify-between hover:bg-surface-container/40 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className={`font-mono text-xs font-bold w-5 text-center ${row.rank === 1 ? 'text-amber-400' : 'text-on-surface-variant'}`}>
-                        #{row.rank}
-                      </span>
-                      <Avatar alias={row.alias} seed={row.avatar_seed} size="sm" isGradient={true} />
-                      <div className="flex flex-col">
-                        <span className="font-display font-bold text-xs text-on-surface flex items-center gap-1.5">
-                          {row.alias}
-                          {row.online && <span className="w-1.5 h-1.5 rounded-full bg-tertiary inline-block" aria-label="online" />}
-                        </span>
-                        <span className="text-[10px] font-mono text-on-surface-variant">{row.total_duels} {row.total_duels === 1 ? 'duel' : 'duels'}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-mono font-bold text-primary">{row.avg_synergy}% avg</span>
-                      <span className="text-[10px] font-mono text-tertiary bg-tertiary/10 px-1.5 py-0.2 rounded">
-                        {row.best_synergy}% best
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: YOU SPACE HUB (your real profile, or an invite when unknown) */}
-          {platformTab === 'youspace' && (
-            <div className="w-full max-w-xl mx-auto flex flex-col gap-4 animate-fade-in text-left">
-              {currentUser ? (
-                <>
-                  <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 border border-primary/20 flex items-center justify-between">
-                    <div className="flex items-center gap-3.5">
-                      <Avatar alias={currentUser.alias} seed={currentUser.avatar_seed} size="lg" isGradient={true} />
-                      <div>
-                        <span className="font-display font-bold text-base text-on-surface block">{currentUser.alias}</span>
-                        <span className="text-[10px] font-mono font-bold text-primary uppercase tracking-wider">
-                          ⚡ {currentUser.stats?.vibe_archetype || 'Unranked'}
-                        </span>
-                      </div>
-                    </div>
-                    <Chip variant="primary" size="sm">
-                      {currentUser.is_guest ? 'Guest' : 'Member'}
-                    </Chip>
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
-                      <span className="font-display font-bold text-lg text-primary block">{currentUser.stats?.total_duels ?? 0}</span>
-                      <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Duels</span>
-                    </div>
-                    <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
-                      <span className="font-display font-bold text-lg text-accent block">{currentUser.stats?.avg_synergy ?? 0}%</span>
-                      <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Avg Vibe</span>
-                    </div>
-                    <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
-                      <span className="font-display font-bold text-lg text-tertiary block">{currentUser.stats?.best_synergy ?? 0}%</span>
-                      <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Best Vibe</span>
-                    </div>
-                    <div className="bg-surface-container p-3 rounded-xl border border-glass-border">
-                      <span className="font-display font-bold text-lg text-on-surface block">{currentUser.stats?.current_streak ?? 0} 🔥</span>
-                      <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">Streak</span>
-                    </div>
-                  </div>
-                </>
               ) : (
-                <div className="p-6 rounded-xl border border-glass-border bg-surface-container text-center flex flex-col items-center gap-3">
-                  <span className="font-display font-bold text-base text-on-surface">Your space is empty</span>
-                  <span className="text-xs text-on-surface-variant max-w-xs">
-                    Enter the arena to create your profile. Your duels, friends, and archetype will appear here.
-                  </span>
-                  <Button variant="primary-gradient" size="sm" onClick={onFindMatch} className="rounded-xl px-5 py-2 text-xs font-bold">
-                    Find a match
-                  </Button>
+                <div className="rounded-full border border-glass-border px-4 py-2 text-xs text-on-surface-variant">Presence unavailable</div>
+              )}
+              {activeMatches !== null && (
+                <div className="rounded-full border border-glass-border bg-surface-container-lowest px-4 py-2 text-xs font-bold text-on-surface">
+                  {activeMatches} {activeMatches === 1 ? 'duel' : 'duels'} live
                 </div>
               )}
             </div>
-          )}
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════════════
-          4. BENTO GRID / "WHAT YOU GET" SECTION
-      ════════════════════════════════════════════════════════════════════════ */}
-      <section id="what-you-get" className="w-full max-w-6xl px-4 md:px-6 py-16 flex flex-col items-center text-left">
-        <div className="w-full flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-10">
+          </div>
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-glass-border text-xs font-mono font-bold text-on-surface mb-3">
-              <span className="text-primary font-bold">✦</span>
-              <span>What you get</span>
-            </div>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold text-on-surface">
-              Set up once. <br className="hidden sm:inline" />
-              Duel the way you want.
-            </h2>
-          </div>
-          <p className="font-body-md text-sm md:text-base text-on-surface-variant max-w-md">
-            WouldYouMatch? is engineered so you spend time connecting and laughing, not configuring complex settings or filling onboarding surveys.
-          </p>
-        </div>
-
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
-          
-          {/* Bento Card 1: Your Front Door */}
-          <div className="p-6 rounded-2xl bg-surface-container-lowest border border-glass-border shadow-elevation-1 flex flex-col justify-between">
-            <div>
-              <span className="text-[10px] font-mono font-bold text-primary uppercase tracking-wider block mb-1">
-                ✦ Your Front Door
-              </span>
-              <h3 className="font-display font-bold text-xl text-on-surface mb-2">
-                A public profile that speaks for itself.
-              </h3>
-              <p className="text-xs font-body-md text-on-surface-variant leading-relaxed mb-6">
-                Customize your seed aura, display alias, and unique URL. Your profile reveals real-time mutual compatibility with anyone who visits.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-surface-container border border-glass-border flex flex-col items-center text-center">
-              <Avatar alias="DesignLab" seed="seed_neon" size="md" isGradient={true} className="mb-2" />
-              <span className="font-display font-bold text-xs text-on-surface">DesignLab</span>
-              <span className="text-[10px] font-mono text-on-surface-variant mb-2">wouldyoumatch.app/u/designlab</span>
-              <Button variant="primary-gradient" size="sm" className="w-full text-xs py-1 rounded-lg">
-                Challenge to Duel
-              </Button>
-            </div>
-          </div>
-
-          {/* Bento Card 2: Friendly Competition */}
-          <div className="p-6 rounded-2xl bg-surface-container-lowest border border-glass-border shadow-elevation-1 flex flex-col justify-between">
-            <div>
-              <span className="text-[10px] font-mono font-bold text-accent uppercase tracking-wider block mb-1">
-                ✦ Friendly Competition
-              </span>
-              <h3 className="font-display font-bold text-xl text-on-surface mb-2">
-                Leaderboards that actually track vibe.
-              </h3>
-              <p className="text-xs font-body-md text-on-surface-variant leading-relaxed mb-6">
-                Rankings computed from recorded duels only: average synergy, duel count, and best synergy. No duels yet means no rank.
-              </p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-surface-container border border-glass-border flex flex-col gap-2">
-              <div className="flex items-center justify-between text-[11px] font-mono">
-                <span className="font-bold text-on-surface">How rankings work</span>
-                <span className="text-tertiary">Recorded duels only</span>
-              </div>
-              <div className="p-2 rounded-lg bg-surface-container-lowest text-xs text-on-surface-variant">
-                Live standings appear here once duels have been recorded. Open the leaderboard tab above to see real rankings.
-              </div>
-            </div>
-          </div>
-
-          {/* Bento Card 3: AI Dilemma Engine */}
-          <div className="p-6 rounded-2xl bg-surface-container-lowest border border-glass-border shadow-elevation-1 flex flex-col justify-between">
-            <div>
-              <span className="text-[10px] font-mono font-bold text-tertiary uppercase tracking-wider block mb-1">
-                ✦ AI Dilemma Engine
-              </span>
-              <h3 className="font-display font-bold text-xl text-on-surface mb-2">
-                Infinite, non-repeating questions.
-              </h3>
-              <p className="text-xs font-body-md text-on-surface-variant leading-relaxed mb-6">
-                Smart pool generation with match history exclusion ensures neither you nor your opponent faces repeated questions.
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-surface-container border border-glass-border flex flex-col gap-2">
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-tertiary font-bold">
-                <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-                <span>Example dilemma</span>
-              </div>
-              <p className="text-xs font-body-md text-on-surface leading-snug">
-                "Live in an orbital space station with zero gravity OR an underwater glass dome with glowing sea life?"
-              </p>
-              <div className="flex items-center gap-1.5 pt-1">
-                <span className="text-[9px] font-mono bg-primary/10 text-primary px-2 py-0.2 rounded-full">
-                  Sci-Fi
-                </span>
-                <span className="text-[9px] font-mono bg-accent/10 text-accent px-2 py-0.2 rounded-full">
-                  Balanced 50/50
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════════════
-          5. COMMUNITY DAILY DILEMMA HERO SECTION
-      ════════════════════════════════════════════════════════════════════════ */}
-      <section className="w-full max-w-4xl px-4 md:px-6 py-12 flex flex-col items-center">
-        <div className="text-center mb-6">
-          <span className="text-xs font-mono font-bold text-primary uppercase tracking-wider block mb-1">
-            ✦ Community Question of the Day
-          </span>
-          <h3 className="font-display text-2xl font-bold text-on-surface">
-            How does your instinct compare to the world?
-          </h3>
-        </div>
-        <div className="w-full">
-          <DailyQuestionCard onPlayQuickMatch={onFindMatch} />
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════════════
-          6. FAQ ACCORDION SECTION
-      ════════════════════════════════════════════════════════════════════════ */}
-      <section id="faq" className="w-full max-w-6xl px-4 md:px-6 py-16 flex flex-col items-center">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-10 text-left">
-          
-          {/* Left Column: Category Tabs & Support Box */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-glass-border text-xs font-mono font-bold text-on-surface mb-3">
-                <span className="text-primary font-bold">✦</span>
-                <span>FAQ</span>
-              </div>
-              <h2 className="font-display text-3xl font-bold text-on-surface leading-tight">
-                Answers to questions that come up most.
-              </h2>
-            </div>
-
-            {/* Category Switcher Tabs */}
-            <div className="flex flex-col gap-1.5">
-              {['General', 'Gameplay & Synergy', 'Privacy & Accounts'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setFaqCategory(cat)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-label-md font-bold transition-all text-left cursor-pointer border ${
-                    faqCategory === cat
-                      ? 'bg-surface-container border-primary/30 text-primary shadow-elevation-1'
-                      : 'border-transparent text-on-surface-variant hover:text-on-surface hover:bg-surface-container/40'
-                  }`}
-                >
-                  {cat}
-                </button>
+            <p className="text-[11px] font-bold uppercase tracking-[.14em] text-on-surface-variant">Top synergy · past 7 days</p>
+            <div className="mt-3 overflow-hidden rounded-[1.6rem_1.2rem_1.6rem_1.2rem] border border-glass-border bg-surface-container-lowest">
+              {leadersState === 'loading' && (
+                <p className="px-5 py-6 text-center text-xs text-on-surface-variant">Reading recorded standings…</p>
+              )}
+              {leadersState === 'error' && (
+                <p className="px-5 py-6 text-center text-xs text-on-surface-variant">Standings are unavailable right now.</p>
+              )}
+              {leadersState === 'empty' && (
+                <div className="px-5 py-6 text-center">
+                  <p className="text-sm font-bold text-on-surface">No ranked duelists yet</p>
+                  <p className="mt-1 text-xs text-on-surface-variant">No duels recorded this week. Play one to take the top spot.</p>
+                </div>
+              )}
+              {leadersState === 'ready' && leaders.map((row) => (
+                <div key={row.id} className="flex items-center justify-between gap-3 border-b border-glass-border/50 px-4 py-2.5 last:border-0">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className={`w-5 shrink-0 text-center font-mono text-xs font-bold ${row.rank === 1 ? 'text-amber-400' : 'text-on-surface-variant'}`}>#{row.rank}</span>
+                    <Avatar alias={row.alias} seed={row.avatar_seed} size="sm" isGradient={true} />
+                    <div className="flex min-w-0 flex-col">
+                      <span className="flex items-center gap-1.5 truncate font-display text-xs font-bold text-on-surface">
+                        {row.alias}
+                        {row.online && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-tertiary" aria-label="online" />}
+                      </span>
+                      <span className="font-mono text-[10px] text-on-surface-variant">{row.total_duels} {row.total_duels === 1 ? 'duel' : 'duels'}</span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-primary">{row.avg_synergy}%</span>
+                    <span className="rounded-full bg-tertiary/10 px-1.5 py-0.5 font-mono text-[10px] text-tertiary">best {row.best_synergy}%</span>
+                  </div>
+                </div>
               ))}
             </div>
-
-            {/* Got Questions Box */}
-            <div className="p-4 rounded-xl bg-surface-container border border-glass-border flex flex-col gap-1.5">
-              <span className="text-xs font-display font-bold text-on-surface">Got Questions?</span>
-              <p className="text-[11px] text-on-surface-variant">
-                Can’t find what you’re looking for? Tap into our community or report suggestions in the ops console.
-              </p>
-              <a href="mailto:support@wouldyoumatch.app" className="text-xs text-primary font-bold hover:underline mt-1">
-                Email us →
-              </a>
-            </div>
-          </div>
-
-          {/* Right Column: Accordion Items */}
-          <div className="lg:col-span-8 flex flex-col gap-3">
-            {filteredFaqs.map((faq, idx) => {
-              const isOpen = openFaqIndices.includes(idx);
-              return (
-                <div
-                  key={faq.q}
-                  className="rounded-xl border border-glass-border bg-surface-container-lowest overflow-hidden transition-colors"
-                >
-                  <button
-                    onClick={() => toggleFaq(idx)}
-                    className="w-full p-4 text-left flex items-center justify-between gap-4 cursor-pointer"
-                  >
-                    <span className="font-display font-bold text-sm text-on-surface">
-                      {faq.q}
-                    </span>
-                    <span className="material-symbols-outlined text-[20px] text-on-surface-variant transition-transform duration-200 shrink-0">
-                      {isOpen ? 'expand_less' : 'expand_more'}
-                    </span>
-                  </button>
-
-                  {isOpen && (
-                    <div className="px-4 pb-4 pt-1 text-xs font-body-md text-on-surface-variant leading-relaxed border-t border-glass-border/40 animate-fade-in">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      {/* ════════════════════════════════════════════════════════════════════════
-          8. PRE-FOOTER CALL TO ACTION (Bottom Hero Banner)
-      ════════════════════════════════════════════════════════════════════════ */}
-      <section className="w-full max-w-5xl px-4 md:px-6 py-12">
-        <div className="w-full p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-surface-container-lowest via-surface-container to-primary/10 border border-primary/20 shadow-elevation-2 flex flex-col md:flex-row items-center justify-between gap-8 text-left">
-          <div className="max-w-md">
-            <h2 className="font-display text-3xl sm:text-4xl font-bold text-on-surface leading-tight mb-3">
-              Your community is one sec away.
-            </h2>
-            <p className="font-body-md text-sm text-on-surface-variant leading-relaxed mb-6">
-              WouldYouMatch? is in beta and completely free to play. Set up your space, challenge your first opponent, and see what it feels like when seven dilemmas spark instant chemistry.
-            </p>
-            <Button
-              variant="primary-gradient"
-              size="lg"
-              onClick={onFindMatch}
-              rightIcon="sports_esports"
-              className="rounded-full px-8 py-3 text-sm font-bold shadow-elevation-1"
-            >
-              Start for Free
-            </Button>
-          </div>
+    <section className="mx-auto max-w-6xl px-5 pb-16 pt-8 md:px-8 md:pb-24"><div className="relative overflow-hidden rounded-[3rem_2rem_3rem_2rem] bg-gradient-to-br from-primary via-[#aa5f8d] to-accent px-7 py-12 text-white shadow-elevation-2 md:px-12 md:py-14"><div className="absolute -right-14 -top-16 h-64 w-64 rounded-full bg-white/10" aria-hidden="true" /><div className="relative max-w-xl"><p className="text-xs font-bold uppercase tracking-[.14em] text-white/70">The next conversation is already out there</p><h2 className="font-display mt-4 text-4xl font-bold leading-tight tracking-[-.05em] md:text-5xl">Let the first question do the work.</h2><Button variant="secondary-solid" size="lg" onClick={onFindMatch} className="mt-8 rounded-full border-white/25 bg-white text-primary hover:bg-white/90">Start a 7-round match</Button></div></div></section>
 
-          <div className="w-full md:w-64 p-4 rounded-2xl bg-surface-container-lowest border border-glass-border shadow-elevation-2 flex flex-col items-center text-center">
-            <Avatar alias="MatchArena" seed="seed_cosmic" size="lg" isGradient={true} className="mb-2 ring-4 ring-primary/20" />
-            <span className="font-display font-bold text-sm text-on-surface">WouldYouMatch? Arena</span>
-            {onlineCount !== null && (
-              <span className="text-[10px] font-mono text-tertiary font-bold mt-0.5">● {onlineCount} Online Now</span>
-            )}
-            <p className="text-[11px] text-on-surface-variant mt-2 mb-3 leading-snug">
-              Instant blind reveals & mutual synergy calculations.
-            </p>
-            <Button variant="secondary-solid" size="sm" onClick={onFindMatch} className="w-full text-xs py-1.5">
-              Enter Arena
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════════════
-          9. RICH FOOTER
-      ════════════════════════════════════════════════════════════════════════ */}
-      <footer className="w-full max-w-6xl px-4 md:px-6 pt-16 pb-8 border-t border-glass-border text-left">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-12">
-          
-          {/* Brand Info */}
-          <div className="col-span-2 sm:col-span-1 flex flex-col gap-2.5">
-            <Logo size="md" />
-            <p className="text-[11px] text-on-surface-variant leading-relaxed">
-              Real-time "Would You Rather" social icebreaker. Instant compatibility through rapid choices.
-            </p>
-          </div>
-
-          {/* Product Links */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-on-surface">Product</span>
-            <button onClick={() => scrollToSection('about')} className="text-xs text-on-surface-variant hover:text-on-surface text-left transition-colors cursor-pointer">About</button>
-            <button onClick={() => scrollToSection('features')} className="text-xs text-on-surface-variant hover:text-on-surface text-left transition-colors cursor-pointer">Features</button>
-            <button onClick={() => scrollToSection('what-you-get')} className="text-xs text-on-surface-variant hover:text-on-surface text-left transition-colors cursor-pointer">What you get</button>
-          </div>
-
-          {/* Resources */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-on-surface">Resources</span>
-            <button onClick={() => scrollToSection('faq')} className="text-xs text-on-surface-variant hover:text-on-surface text-left transition-colors cursor-pointer">FAQ</button>
-            <button onClick={onFindMatch} className="text-xs text-on-surface-variant hover:text-on-surface text-left transition-colors cursor-pointer">Quick Match</button>
-            <a href="mailto:support@wouldyoumatch.app" className="text-xs text-on-surface-variant hover:text-on-surface transition-colors">Support</a>
-          </div>
-
-          {/* Legal */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-on-surface">Legal</span>
-            <button
-              onClick={onOpenTerms}
-              className="text-xs text-on-surface-variant cursor-pointer hover:text-on-surface text-left transition-colors"
-            >
-              Terms of Service
-            </button>
-            <button
-              onClick={onOpenPrivacyPolicy}
-              className="text-xs text-on-surface-variant cursor-pointer hover:text-on-surface text-left transition-colors"
-            >
-              Privacy Policy
-            </button>
-            <button
-              onClick={onOpenCookieSettings}
-              className="text-xs text-on-surface-variant cursor-pointer hover:text-on-surface text-left transition-colors"
-            >
-              Cookie Settings
-            </button>
-          </div>
-        </div>
-
-        <div className="pt-6 border-t border-glass-border/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] font-mono text-on-surface-variant">
-          <span>© {new Date().getFullYear()} WouldYouMatch? All rights reserved.</span>
-          <span>Zero-friction social duel platform.</span>
-        </div>
-      </footer>
-    </div>
+    <footer className="mx-auto flex max-w-6xl flex-col gap-5 px-5 pb-8 text-xs text-on-surface-variant sm:flex-row sm:items-center sm:justify-between md:px-8"><div className="flex items-center gap-2"><Logo size="sm" /><span>Questions make the best first move.</span></div><div className="flex gap-5"><button onClick={onOpenPrivacyPolicy} className="hover:text-on-surface">Privacy</button><button onClick={onOpenTerms} className="hover:text-on-surface">Terms</button><button onClick={onOpenCookieSettings} className="hover:text-on-surface">Cookies</button></div></footer>
+  </main>
   );
 };
