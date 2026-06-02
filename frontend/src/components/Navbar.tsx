@@ -64,39 +64,27 @@ export const Navbar: React.FC<NavbarProps> = ({
           role="button"
           aria-label="WouldYouMatch? Home"
         >
-          <Logo size="md" />
+          <Logo size="md" textClassName="hidden md:inline" />
         </div>
 
         {/* Center: Navigation Links (Matching Video Reference) */}
-        <nav className="hidden lg:flex items-center gap-6">
+        <nav className="hidden md:flex items-center md:w-80 justify-start gap-6">
           <button
-            onClick={() => scrollToSection('about')}
+            onClick={() => scrollToSection('how-it-feels')}
             className="text-xs font-body-md font-medium text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
           >
-            About
+            How It Works
           </button>
           <button
-            onClick={() => scrollToSection('features')}
+            onClick={() => scrollToSection('rankings')}
             className="text-xs font-body-md font-medium text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
           >
-            Features
-          </button>
-          <button
-            onClick={() => scrollToSection('what-you-get')}
-            className="text-xs font-body-md font-medium text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
-          >
-            What you get
-          </button>
-          <button
-            onClick={() => scrollToSection('faq')}
-            className="text-xs font-body-md font-medium text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
-          >
-            FAQ
+            Rankings
           </button>
         </nav>
 
         {/* Right: Controls, Auth & CTA */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Sound Toggle */}
           <Button
             variant="ghost-icon"
