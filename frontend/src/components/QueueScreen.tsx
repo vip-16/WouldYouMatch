@@ -43,25 +43,33 @@ export const QueueScreen: React.FC<QueueScreenProps> = ({ onCancel }) => {
   const secs = seconds % 60;
   const formattedTime = `${minutes}:${secs < 10 ? '0' + secs : secs}`;
 
+  const isSettlingIn = seconds >= 12;
   const isTakingLong = seconds >= 35;
 
   return (
-    <main className="relative z-10 flex-grow flex flex-col items-center justify-center px-4 min-h-[calc(100vh-4rem)] pt-16 pb-8">
-      <Card className="w-full max-w-md p-8 flex flex-col items-center gap-6 text-center bg-surface-container-lowest rounded-2xl border border-glass-border shadow-elevation-2">
+    <main className="organic-page relative z-10 flex-1 min-h-0 w-full flex flex-col items-center justify-center px-4 pt-16 pb-8">
+      <div className="organic-blob organic-blob--aqua w-80 h-80 right-[12%] top-[20%] opacity-50" aria-hidden="true" />
+      <Card className="w-full max-w-md p-8 flex flex-col items-center gap-6 text-center bg-surface-container-lowest/80 rounded-[3rem_2rem_3rem_2rem] border border-glass-border shadow-elevation-2 backdrop-blur-xl">
         {/* Category Pill Tag */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-glass-border text-xs font-mono font-bold text-on-surface">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span>Instant WebSocket Radar</span>
+          <span>Making a little room for chance</span>
         </div>
 
         {/* Radar Graphic */}
         <div className="relative w-32 h-32 flex items-center justify-center">
           {/* Subtle concentric rings */}
-          <div className="absolute inset-0 rounded-full border border-primary/25 animate-pulse-radar" aria-hidden="true" />
-          <div className="absolute inset-4 rounded-full border border-primary/15 animate-pulse-radar" style={{ animationDelay: '0.8s' }} aria-hidden="true" />
+          <div className="absolute inset-0 rounded-[48%_52%_42%_58%] border border-primary/25 animate-pulse-radar" aria-hidden="true" />
+          <div className="absolute inset-4 rounded-[58%_42%_55%_45%] border border-accent/25 animate-pulse-radar" style={{ animationDelay: '0.8s' }} aria-hidden="true" />
+          {/* Slow rotating sweep for a sense of forward motion */}
+          <div
+            className="absolute inset-0 rounded-[48%_52%_42%_58%] animate-spin-slow motion-reduce:animate-none"
+            style={{ background: 'conic-gradient(from 0deg, rgba(236,139,173,0.28), transparent 28%)' }}
+            aria-hidden="true"
+          />
 
           {/* Central search badge */}
-          <div className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center shadow-elevation-2">
+          <div className="relative z-10 w-14 h-14 rounded-[45%_55%_48%_52%] bg-gradient-to-br from-primary via-primary-container to-accent text-white flex items-center justify-center shadow-elevation-2">
             <span className="material-symbols-outlined text-[26px]">search</span>
           </div>
         </div>
@@ -69,26 +77,34 @@ export const QueueScreen: React.FC<QueueScreenProps> = ({ onCancel }) => {
         {/* Status Copy */}
         <div className="space-y-1.5">
           <h2 className="font-display text-2xl font-bold text-on-surface">
-            Finding Your Opponent
+            Looking for your next spark
           </h2>
           <p className="text-xs text-on-surface-variant max-w-xs">
-            Connecting to active matchmaking queue for quick 7-round duel…
+            We’re pairing you with another curious person for a quick seven-question exchange.
           </p>
         </div>
 
-        {/* Timer Capsule */}
+        {/* Liveness Capsule */}
         <div className="flex items-center gap-2 bg-surface-container px-3.5 py-1.5 rounded-full border border-glass-border">
-          <span className="material-symbols-outlined text-primary text-[16px]">schedule</span>
-          <span className="font-mono text-xs font-bold text-on-surface">
-            Elapsed: {formattedTime}
+          <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" aria-hidden="true" />
+          <span className="font-mono text-xs font-bold text-on-surface" aria-live="polite">
+            Searching · {formattedTime}
           </span>
         </div>
+
+        {/* Gentle reassurance while settling in */}
+        {isSettlingIn && !isTakingLong && (
+          <div className="w-full p-3 rounded-md bg-surface-container-high border border-glass-border text-xs text-on-surface-variant text-left flex items-start gap-2 animate-fade-in">
+            <span className="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">favorite</span>
+            <span>Still searching — thanks for hanging on.</span>
+          </div>
+        )}
 
         {/* Taking Long / Timeout notice */}
         {isTakingLong && (
           <div className="w-full p-3 rounded-md bg-surface-container-high border border-glass-border text-xs text-on-surface-variant text-left flex items-start gap-2 animate-fade-in">
             <span className="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">info</span>
-            <span>Looking for another online player. You can keep waiting or cancel and retry.</span>
+            <span>Still with you — staying put usually finds someone soon. You can also cancel and retry any time.</span>
           </div>
         )}
 
