@@ -63,12 +63,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const isUrgent = timeLeft <= 5;
 
   return (
-    <main className="relative z-10 flex-grow flex flex-col items-center justify-center px-4 md:px-6 pt-20 pb-8 max-w-4xl mx-auto w-full min-h-[calc(100vh-4rem)]">
+    <main className="organic-page relative z-10 flex-1 min-h-0 w-full mx-auto flex flex-col">
+      <div className="overflow-y-auto scrollbar-none flex-1 min-h-0 flex flex-col">
+      <div className="w-full flex flex-col items-center px-4 md:px-8 lg:px-10 pt-24 pb-10 my-auto">
       {/* ── Top HUD ── */}
-      <div className="w-full flex items-center justify-between gap-3 mb-8 p-4 rounded-2xl bg-surface-container-lowest border border-glass-border shadow-elevation-1">
+      <div className="w-full flex items-center justify-between gap-3 mb-8 p-4 rounded-[1.8rem_1.35rem_1.8rem_1.35rem] bg-surface-container-lowest/80 border border-glass-border shadow-elevation-1 backdrop-blur-xl">
         {/* Left: Round Progress Dots */}
-        <div className="flex items-center gap-2.5">
-          <span className="font-mono text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="hidden sm:inline font-mono text-xs font-bold text-on-surface-variant uppercase tracking-wider">
             Round {currentRound}/{totalRounds}
           </span>
           <div className="flex items-center gap-1.5" aria-label={`Round ${currentRound} of ${totalRounds}`}>
@@ -92,7 +94,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
         {/* Center: Urgency-Aware Timer */}
         <div
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border transition-all shrink-0 ${
             isUrgent
               ? 'bg-error/15 border-error text-error font-bold animate-pulse'
               : 'bg-surface-container border-glass-border text-on-surface'
@@ -110,7 +112,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         </div>
 
         {/* Right: Opponent Status Chip */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 shrink-0">
           <Avatar
             alias={opponent?.alias}
             size="sm"
@@ -129,13 +131,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       </div>
 
       {/* ── Category Pill Tag ── */}
-      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-glass-border text-xs font-mono font-bold text-on-surface mb-3">
+      <div className="organic-eyebrow mb-3">
         <span className="text-primary font-bold">✦</span>
-        <span>Simultaneous Blind Duel</span>
+        <span>Answers meet at the same moment</span>
       </div>
 
       {/* ── Prompt Header ── */}
-      <h2 className="font-display text-2xl md:text-3xl font-bold text-on-surface text-center mb-8">
+      <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-on-surface text-center mb-8 tracking-[-.05em]">
         Would you rather…
       </h2>
 
@@ -146,12 +148,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           onClick={() => handleSelect('left')}
           disabled={Boolean(selectedChoice) || Boolean(lastResult)}
           aria-label={`Option A: ${question.left}`}
-          className={`group relative flex-1 min-h-[200px] md:min-h-[240px] rounded-2xl p-7 flex flex-col items-center justify-center text-center transition-all duration-150 cursor-pointer border select-none ${
+          className={`group relative flex-1 min-h-[210px] md:min-h-[280px] lg:min-h-[320px] rounded-2xl p-7 lg:p-10 flex flex-col items-center justify-center text-center transition-all duration-150 cursor-pointer border select-none ${
             selectedChoice === 'left'
               ? 'bg-surface-container shadow-state-selected-coral border-primary ring-2 ring-primary/30'
               : selectedChoice
               ? 'bg-surface-container-lowest border-glass-border opacity-40 cursor-default'
-              : 'bg-surface-container-lowest hover:bg-surface-container-low border-glass-border hover:border-primary/50 shadow-elevation-1 hover:shadow-elevation-2 active:scale-[0.99]'
+              : 'organic-choice organic-choice-left bg-surface-container-lowest hover:bg-surface-container-low border-glass-border hover:border-primary/50 shadow-elevation-1 hover:shadow-elevation-2 active:scale-[0.99]'
           }`}
         >
           {/* Identifier Badge for Accessibility */}
@@ -165,7 +167,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             </span>
           </div>
 
-          <h3 className="font-display text-lg md:text-xl font-bold text-on-surface leading-snug">
+          <h3 className="font-display text-lg md:text-xl lg:text-2xl font-bold text-on-surface leading-snug">
             {question.left}
           </h3>
 
@@ -181,7 +183,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         </button>
 
         {/* OR Badge in Center */}
-        <div className="self-center md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-10 w-9 h-9 rounded-full bg-surface-container border border-glass-border flex items-center justify-center shadow-elevation-1 pointer-events-none">
+        <div className="self-center md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-10 w-11 h-11 rounded-[48%_52%_42%_58%] bg-surface-container border border-glass-border flex items-center justify-center shadow-elevation-1 pointer-events-none">
           <span className="font-display text-xs font-bold text-on-surface-variant">OR</span>
         </div>
 
@@ -190,12 +192,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           onClick={() => handleSelect('right')}
           disabled={Boolean(selectedChoice) || Boolean(lastResult)}
           aria-label={`Option B: ${question.right}`}
-          className={`group relative flex-1 min-h-[200px] md:min-h-[240px] rounded-2xl p-7 flex flex-col items-center justify-center text-center transition-all duration-150 cursor-pointer border select-none ${
+          className={`group relative flex-1 min-h-[210px] md:min-h-[280px] lg:min-h-[320px] rounded-2xl p-7 lg:p-10 flex flex-col items-center justify-center text-center transition-all duration-150 cursor-pointer border select-none ${
             selectedChoice === 'right'
               ? 'bg-surface-container shadow-state-selected-violet border-accent ring-2 ring-accent/30'
               : selectedChoice
               ? 'bg-surface-container-lowest border-glass-border opacity-40 cursor-default'
-              : 'bg-surface-container-lowest hover:bg-surface-container-low border-glass-border hover:border-accent/50 shadow-elevation-1 hover:shadow-elevation-2 active:scale-[0.99]'
+              : 'organic-choice organic-choice-right bg-surface-container-lowest hover:bg-surface-container-low border-glass-border hover:border-accent/50 shadow-elevation-1 hover:shadow-elevation-2 active:scale-[0.99]'
           }`}
         >
           {/* Identifier Badge for Accessibility */}
@@ -209,7 +211,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             </span>
           </div>
 
-          <h3 className="font-display text-lg md:text-xl font-bold text-on-surface leading-snug">
+          <h3 className="font-display text-lg md:text-xl lg:text-2xl font-bold text-on-surface leading-snug">
             {question.right}
           </h3>
 
@@ -259,6 +261,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           </div>
         </div>
       )}
+      </div>
+      </div>
     </main>
   );
 };
