@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { User as UserIcon, Users, UserPlus, History as HistoryIcon, BarChart3 } from 'lucide-react';
 import { ModalShell } from './ui/ModalShell';
 import { Button } from './ui/Button';
@@ -6,6 +6,33 @@ import { Avatar } from './ui/Avatar';
 import { Chip } from './ui/Chip';
 import { User, Friend, FriendRequestsData, MatchHistoryItem, UserStats } from '../types';
 import { apiFetch } from '../services/api';
+
+// Counts from 0 to a real fetched target with an ease-out curve.
+// Reduced-motion users jump straight to the final (real) value.
+function useCountUp(target: number, animate: boolean) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    const reduce =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!animate || reduce) {
+      setVal(target);
+      return;
+    }
+    let raf = 0;
+    const t0 = performance.now();
+    const dur = 650;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - t0) / dur);
+      setVal(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, animate]);
+  return val;
+}
 
 interface YouSpaceModalProps {
   currentUser: User | null;
@@ -57,6 +84,50 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loadingData, setLoadingData] = useState(false);
+
+  // Sliding tab thumb (Video-A style): measured pill gliding to the active tab.
+  const tabBarRef = useRef<HTMLDivElement>(null);
+  const tabBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [thumb, setThumb] = useState({ left: 0, width: 0, visible: false });
+  const positionThumb = useCallback(() => {
+    const bar = tabBarRef.current;
+    const btn = tabBtnRefs.current[activeTab];
+    if (!bar || !btn) return;
+    const barBox = bar.getBoundingClientRect();
+    const btnBox = btn.getBoundingClientRect();
+    setThumb({ left: btnBox.left - barBox.left, width: btnBox.width, visible: true });
+  }, [activeTab]);
+  useEffect(() => {
+    positionThumb();
+  }, [positionThumb, friends.length, requests.incoming.length, history.length, loadingData]);
+  useEffect(() => {
+    window.addEventListener('resize', positionThumb);
+    return () => window.removeEventListener('resize', positionThumb);
+  }, [positionThumb]);
+
+  // Alignment bar grows in on mount instead of rendering at its final width.
+  const [barsIn, setBarsIn] = useState(false);
+  useEffect(() => {
+    if (activeTab !== 'stats') return;
+    setBarsIn(false);
+    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setBarsIn(true)));
+    return () => cancelAnimationFrame(raf);
+  }, [activeTab, stats]);
+
+  // Count-ups target only real fetched values; they replay whenever their tab opens.
+  const onStatsTab = activeTab === 'stats';
+  const onProfileTab = activeTab === 'profile';
+  const animDuels = useCountUp(stats?.total_duels || 0, onStatsTab);
+  const animAvg = useCountUp(stats?.avg_synergy || 0, onStatsTab);
+  const animBest = useCountUp(stats?.best_synergy || 0, onStatsTab);
+  const animStreak = useCountUp(stats?.current_streak || 0, onStatsTab);
+  const animProfDuels = useCountUp(stats?.total_duels || 0, onProfileTab);
+  const animProfAvg = useCountUp(stats?.avg_synergy || 0, onProfileTab);
+  const alignPct = (() => {
+    const agreed = stats?.agreed_rounds_count || 0;
+    const split = stats?.disagreed_rounds_count || 0;
+    return agreed + split > 0 ? Math.round((agreed / (agreed + split)) * 100) : 0;
+  })();
 
   const fetchSocialData = useCallback(async () => {
     if (!currentUser?.id) return;
@@ -212,8 +283,16 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
           )}
         </div>
 
-        {/* ── Segmented Pill Tab Bar (Full Title Visibility, Sleek Lucide Icons & Responsive Badges) ── */}
-        <div className="grid grid-cols-5 gap-1.5 sm:gap-2 bg-surface-container/60 p-1.5 rounded-xl border border-glass-border w-full">
+        {/* ── Segmented Pill Tab Bar with sliding thumb ── */}
+        <div
+          ref={tabBarRef}
+          className="relative grid grid-cols-5 gap-1.5 sm:gap-2 bg-surface-container/60 p-1.5 rounded-xl border border-glass-border w-full"
+        >
+          <span
+            aria-hidden="true"
+            className="absolute top-1.5 bottom-1.5 rounded-lg bg-surface-container-lowest border border-primary/25 shadow-elevation-1 transition-all duration-[380ms] ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+            style={{ left: thumb.left, width: thumb.width, opacity: thumb.visible ? 1 : 0 }}
+          />
           {[
             { id: 'profile', label: 'Profile', icon: UserIcon, count: null },
             { id: 'friends', label: 'Friends', icon: Users, count: friends.length },
@@ -226,19 +305,28 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
             return (
               <button
                 key={tab.id}
+                ref={(el) => {
+                  tabBtnRefs.current[tab.id] = el;
+                }}
                 onClick={() => setActiveTab(tab.id as any)}
                 title={tab.label}
-                className={`w-full min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 sm:py-2.5 rounded-lg text-xs font-label-md transition-all cursor-pointer ${
+                className={`relative z-10 w-full min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 sm:py-2.5 rounded-lg text-xs font-label-md transition-colors cursor-pointer ${
                   isActive
-                    ? 'bg-surface-container-lowest text-primary font-bold shadow-elevation-1 border border-primary/25 ring-1 ring-primary/20'
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50 font-medium'
+                    ? 'text-primary font-bold'
+                    : 'text-on-surface-variant hover:text-on-surface font-medium'
                 }`}
               >
                 <Icon className={`w-4 h-4 shrink-0 transition-transform ${isActive ? 'scale-110 text-primary' : 'text-on-surface-variant'}`} />
-                <span className="whitespace-nowrap text-xs font-semibold">{tab.label}</span>
+                <span className="hidden min-[500px]:inline whitespace-nowrap text-xs font-semibold">{tab.label}</span>
+                {tab.count !== null && tab.count > 0 && (
+                  <span
+                    className="absolute top-1 right-1 min-[500px]:hidden w-1.5 h-1.5 rounded-full bg-primary"
+                    aria-hidden="true"
+                  />
+                )}
                 {tab.count !== null && (
                   <span
-                    className={`shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                    className={`hidden min-[500px]:inline-flex shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
                       isActive
                         ? 'bg-primary text-white shadow-sm'
                         : 'bg-surface-container-high text-on-surface-variant'
@@ -287,14 +375,14 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
                 )}
               </div>
 
-              <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-on-surface-variant font-mono">
+              <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-on-surface-variant font-mono flex-wrap">
                 <span className="material-symbols-outlined text-[13px]">lock</span>
                 <span>Username is fixed</span>
                 <span>·</span>
                 <button
                   type="button"
                   onClick={handleCopyHandle}
-                  className="text-primary hover:underline cursor-pointer"
+                  className="text-primary hover:underline cursor-pointer truncate min-w-0"
                 >
                   wouldyoumatch.app/u/{(currentUser?.alias || 'user').toLowerCase()} {copiedHandle ? '(Copied!)' : ''}
                 </button>
@@ -382,18 +470,18 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
 
               {/* Symmetrical Stats Overview */}
               <div className="w-full grid grid-cols-2 gap-3 mt-5 pt-4 border-t border-glass-border/60">
-                <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container/50 border border-glass-border">
-                  <span className="text-lg font-display font-bold text-on-surface">
-                    {stats?.total_duels || 0}
+                <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container/50 border border-glass-border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-elevation-1">
+                  <span className="text-lg font-display font-bold text-on-surface tabular-nums">
+                    {animProfDuels}
                   </span>
                   <span className="text-[11px] font-label-md text-on-surface-variant uppercase tracking-wider">
                     Duels Played
                   </span>
                 </div>
 
-                <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container/50 border border-glass-border">
-                  <span className="text-lg font-display font-bold text-primary">
-                    {stats?.avg_synergy || 0}%
+                <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container/50 border border-glass-border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-elevation-1">
+                  <span className="text-lg font-display font-bold text-primary tabular-nums">
+                    {animProfAvg}%
                   </span>
                   <span className="text-[11px] font-label-md text-on-surface-variant uppercase tracking-wider">
                     Career Vibe
@@ -472,10 +560,11 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
               </div>
             ) : (
               <div className="flex flex-col gap-2 max-h-[320px] overflow-y-auto pr-1">
-                {filteredFriends.map((friend) => (
+                {filteredFriends.map((friend, fi) => (
                   <div
                     key={friend.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest border border-glass-border hover:border-glass-border-hover transition-all"
+                    style={{ animationDelay: `${Math.min(fi, 8) * 55}ms` }}
+                    className="animate-rise-stagger flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest border border-glass-border hover:border-glass-border-hover hover:-translate-y-0.5 hover:shadow-elevation-1 transition-all"
                   >
                     <div
                       className="flex items-center gap-3 cursor-pointer min-w-0 flex-1"
@@ -602,10 +691,11 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
                     <p className="text-xs">No pending incoming friend requests.</p>
                   </div>
                 ) : (
-                  requests.incoming.map((req) => (
+                  requests.incoming.map((req, ri) => (
                     <div
                       key={req.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest border border-glass-border"
+                      style={{ animationDelay: `${Math.min(ri, 8) * 55}ms` }}
+                      className="animate-rise-stagger flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest border border-glass-border"
                     >
                       <div
                         className="flex items-center gap-3 cursor-pointer"
@@ -660,10 +750,11 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
                     <p className="text-xs">No outgoing friend requests pending.</p>
                   </div>
                 ) : (
-                  requests.outgoing.map((req) => (
+                  requests.outgoing.map((req, ri) => (
                     <div
                       key={req.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest border border-glass-border"
+                      style={{ animationDelay: `${Math.min(ri, 8) * 55}ms` }}
+                      className="animate-rise-stagger flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest border border-glass-border"
                     >
                       <div className="flex items-center gap-3">
                         <Avatar alias={req.alias} size="sm" />
@@ -731,12 +822,13 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
               </div>
             ) : (
               <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-1">
-                {filteredHistory.map((m) => {
+                {filteredHistory.map((m, hi) => {
                   const isExpanded = expandedMatchId === m.match_id;
                   return (
                     <div
                       key={m.match_id}
-                      className="rounded-xl border border-glass-border bg-surface-container-lowest overflow-hidden transition-all"
+                      style={isExpanded ? undefined : { animationDelay: `${Math.min(hi, 8) * 55}ms` }}
+                      className={`${isExpanded ? '' : 'animate-rise-stagger '}rounded-xl border border-glass-border bg-surface-container-lowest overflow-hidden transition-all`}
                     >
                       <div
                         onClick={() => setExpandedMatchId(isExpanded ? null : m.match_id)}
@@ -779,10 +871,10 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
                                 key={r.round}
                                 className="flex items-center justify-between text-xs p-2 rounded-lg bg-surface-container-lowest border border-glass-border/60"
                               >
-                                <span className="font-mono text-[10px] text-on-surface-variant">
+                                <span className="font-mono text-[10px] text-on-surface-variant shrink-0">
                                   R{r.round}
                                 </span>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap justify-end">
                                   <span className="text-[11px] font-bold text-on-surface">
                                     You: {r.user_choice === 'left' ? 'Option A' : 'Option B'}
                                   </span>
@@ -814,7 +906,7 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
           <div key="tab-stats" className="flex flex-col gap-3 animate-tab-fade">
             
             {/* Personality Archetype Hero Card */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-primary/10 via-surface-container to-accent/10 border border-primary/20 flex flex-col gap-1.5">
+            <div className="animate-rise-stagger p-4 rounded-2xl bg-gradient-to-r from-primary/10 via-surface-container to-accent/10 border border-primary/20 flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-primary">
                   ✦ Psychological Archetype
@@ -824,42 +916,56 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
                 </span>
               </div>
               <h3 className="font-display font-bold text-xl text-on-surface">
-                {stats?.vibe_archetype || '⚡ Twin Flame Magnet'}
+                {stats ? stats.vibe_archetype : '…'}
               </h3>
               <p className="text-xs font-body-md text-on-surface-variant leading-relaxed">
-                {stats?.archetype_quote || 'You exhibit high harmonic alignment with online players, consistently finding mutual ground on absurd and complex dilemmas.'}
+                {stats
+                  ? stats.archetype_quote
+                  : 'Fetching your recorded duel statistics.'}
               </p>
             </div>
 
             {/* 4 Metric Stats Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
-              <div className="bg-surface-container-lowest p-3 rounded-xl border border-glass-border">
-                <span className="font-display font-bold text-lg text-primary block">
-                  {stats?.total_duels || 0}
+              <div
+                style={{ animationDelay: '60ms' }}
+                className="animate-rise-stagger bg-surface-container-lowest p-3 rounded-xl border border-glass-border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-elevation-1"
+              >
+                <span className="font-display font-bold text-lg text-primary tabular-nums block">
+                  {animDuels}
                 </span>
                 <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">
                   Duels
                 </span>
               </div>
-              <div className="bg-surface-container-lowest p-3 rounded-xl border border-glass-border">
-                <span className="font-display font-bold text-lg text-accent block">
-                  {stats?.avg_synergy || 0}%
+              <div
+                style={{ animationDelay: '115ms' }}
+                className="animate-rise-stagger bg-surface-container-lowest p-3 rounded-xl border border-glass-border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-elevation-1"
+              >
+                <span className="font-display font-bold text-lg text-accent tabular-nums block">
+                  {animAvg}%
                 </span>
                 <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">
                   Avg Vibe
                 </span>
               </div>
-              <div className="bg-surface-container-lowest p-3 rounded-xl border border-glass-border">
-                <span className="font-display font-bold text-lg text-tertiary block">
-                  {stats?.best_synergy || 0}%
+              <div
+                style={{ animationDelay: '170ms' }}
+                className="animate-rise-stagger bg-surface-container-lowest p-3 rounded-xl border border-glass-border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-elevation-1"
+              >
+                <span className="font-display font-bold text-lg text-tertiary tabular-nums block">
+                  {animBest}%
                 </span>
                 <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">
                   Top Match
                 </span>
               </div>
-              <div className="bg-surface-container-lowest p-3 rounded-xl border border-glass-border">
-                <span className="font-display font-bold text-lg text-on-surface block">
-                  {stats?.current_streak || 0} 🔥
+              <div
+                style={{ animationDelay: '225ms' }}
+                className="animate-rise-stagger bg-surface-container-lowest p-3 rounded-xl border border-glass-border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-elevation-1"
+              >
+                <span className="font-display font-bold text-lg text-on-surface tabular-nums block">
+                  {animStreak} 🔥
                 </span>
                 <span className="text-[10px] font-label-md text-on-surface-variant uppercase font-bold">
                   Streak
@@ -868,28 +974,21 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
             </div>
 
             {/* Dilemma Agreement Ratio Bar */}
-            <div className="p-3.5 rounded-xl bg-surface-container-lowest border border-glass-border flex flex-col gap-2">
+            <div
+              style={{ animationDelay: '280ms' }}
+              className="animate-rise-stagger p-3.5 rounded-xl bg-surface-container-lowest border border-glass-border flex flex-col gap-2"
+            >
               <div className="flex items-center justify-between text-xs font-label-md">
                 <span className="text-on-surface font-bold">Total Choice Alignment</span>
-                <span className="font-mono text-primary font-bold">
+                <span className="font-mono text-primary font-bold tabular-nums">
                   {stats?.agreed_rounds_count || 0} Matched / {stats?.disagreed_rounds_count || 0} Split
                 </span>
               </div>
-              
+
               <div className="w-full h-2 rounded-full bg-surface-container overflow-hidden flex">
                 <div
-                  className="h-full bg-primary transition-all duration-500"
-                  style={{
-                    width: `${
-                      (stats?.agreed_rounds_count || 0) + (stats?.disagreed_rounds_count || 0) > 0
-                        ? Math.round(
-                            ((stats?.agreed_rounds_count || 0) /
-                              ((stats?.agreed_rounds_count || 0) + (stats?.disagreed_rounds_count || 0))) *
-                              100
-                          )
-                        : 50
-                    }%`,
-                  }}
+                  className="h-full bg-primary transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
+                  style={{ width: `${barsIn ? alignPct : 0}%` }}
                 />
                 <div className="h-full bg-surface-container-highest flex-1" />
               </div>
