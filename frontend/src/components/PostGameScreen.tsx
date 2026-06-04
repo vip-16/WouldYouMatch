@@ -228,7 +228,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 w-full h-full min-h-[calc(100vh-64px)] flex flex-col bg-background text-on-surface select-text relative">
+    <div className="organic-page flex-1 min-h-0 w-full h-full flex flex-col bg-background text-on-surface select-text relative overflow-hidden">
       {/* ════ Toast Notifications Layer ════ */}
       <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 max-w-md w-full px-4 pointer-events-none">
         {toasts.map((toast) => (
@@ -261,7 +261,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
       </div>
 
       {/* ════ Website Chat Header ════ */}
-      <header className="sticky top-0 z-20 w-full bg-surface/90 backdrop-blur-md border-b border-glass-border px-4 md:px-8 py-3.5 flex items-center justify-between shrink-0 shadow-2xs">
+      <header className="sticky top-0 z-20 w-full bg-surface/78 backdrop-blur-xl border-b border-glass-border px-4 md:px-8 py-3.5 flex items-center justify-between shrink-0 shadow-elevation-1">
         {/* Left: Opponent Identity & Match Synergy */}
         <div className="flex items-center gap-3.5 min-w-0">
           <button
@@ -284,7 +284,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
               <span className="text-base font-bold text-on-surface truncate leading-tight font-display">
                 {opponent?.alias || 'Opponent'}
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono font-bold bg-primary/10 text-primary px-2.5 py-0.5 rounded-full border border-primary/20">
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono font-bold bg-primary/10 text-primary px-2.5 py-0.5 rounded-full border border-primary/20 shadow-sm">
                 ✦ {targetPercentage}% Synergy
               </span>
             </div>
@@ -317,7 +317,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
           ) : (
             <button
               onClick={onConnectRequest}
-              className="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+              className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
               title="Add as Friend"
             >
               <UserPlus className="w-3.5 h-3.5 text-on-surface-variant" />
@@ -342,7 +342,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
             <button
               onClick={onRematchRequest}
               disabled={rematchState === 'requested'}
-              className="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
               title="Challenge to Rematch"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${rematchState === 'requested' ? 'animate-spin' : ''}`} />
@@ -594,7 +594,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
       )}
 
       {/* ════ Website Message Composer ════ */}
-      <footer className="sticky bottom-0 z-20 w-full bg-surface/95 backdrop-blur-md border-t border-glass-border px-4 md:px-8 py-4 shrink-0 shadow-2xs">
+      <footer className="sticky bottom-0 z-20 w-full bg-surface/95 backdrop-blur-md border-t border-glass-border px-4 md:px-8 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] shrink-0 shadow-2xs">
         <form onSubmit={handleSend} className="w-full max-w-3xl mx-auto flex items-center gap-3">
           {/* Main Input Pill (Aesthetic pill shape spanning width, neutral non-red focus outline) */}
           <div className="flex-1 flex items-center bg-surface-container-low border border-glass-border rounded-2xl md:rounded-full px-4 py-3 focus-within:border-zinc-400 dark:focus-within:border-zinc-500 focus-within:ring-1 focus-within:ring-zinc-400/20 transition-all">
