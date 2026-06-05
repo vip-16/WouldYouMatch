@@ -59,7 +59,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({
     <div
       role="region"
       aria-label="Cookie and Storage Preferences"
-      className="fixed bottom-0 inset-x-0 z-50 p-3 sm:p-4 animate-slide-up"
+      className="fixed bottom-0 inset-x-0 z-50 pt-3 sm:pt-4 px-3 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-slide-up"
     >
       <div className="max-w-4xl mx-auto bg-surface-container-lowest/95 backdrop-blur-md border border-primary/30 rounded-2xl p-4 sm:p-5 shadow-elevation-2 flex flex-col gap-3 ring-1 ring-primary/20">
         
