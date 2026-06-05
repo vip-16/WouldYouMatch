@@ -6,6 +6,32 @@ import { Chip } from './ui/Chip';
 import { PublicProfileData, User } from '../types';
 import { apiFetch } from '../services/api';
 
+// Counts from 0 to a real fetched target; reduced-motion jumps to final.
+function useCountUp(target: number, animate: boolean) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    const reduce =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!animate || reduce) {
+      setVal(target);
+      return;
+    }
+    let raf = 0;
+    const t0 = performance.now();
+    const dur = 650;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - t0) / dur);
+      setVal(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, animate]);
+  return val;
+}
+
 interface PublicProfileModalProps {
   targetUserId: string;
   currentUser: User | null;
@@ -94,16 +120,16 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({
       ) : (
         <div className="flex flex-col gap-5">
           {/* Header Card */}
-          <div className="flex items-center justify-between bg-surface-container-lowest p-4 rounded-lg border border-glass-border">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-lowest p-4 rounded-lg border border-glass-border">
+            <div className="flex items-center gap-3 min-w-0">
               <Avatar
                 alias={profile.alias}
                 size="lg"
                 showStatus={true}
                 statusColor={profile.online ? 'online' : 'offline'}
               />
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-display font-bold text-lg text-on-surface leading-tight">
                     {profile.alias}
                   </h3>
@@ -118,7 +144,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({
             </div>
 
             {/* Friend / Message Action */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
               {profile.friend_status === 'mutual' ? (
                 <Button
                   variant="primary-gradient"
@@ -172,22 +198,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({
             </div>
 
             {profile.mutual_synergy.percentage !== null ? (
-              <div className="flex items-center gap-4 mt-1">
-                <div className="text-3xl font-display font-bold text-primary">
-                  {profile.mutual_synergy.percentage}%
-                </div>
-                <div className="flex-1">
-                  <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 rounded-full"
-                      style={{ width: `${profile.mutual_synergy.percentage}%` }}
-                    />
-                  </div>
-                  <span className="text-[11px] text-on-surface-variant mt-1 block">
-                    Based on {profile.mutual_synergy.shared_duels_count} shared 7-choice duels.
-                  </span>
-                </div>
-              </div>
+              <SynergyMeter percentage={profile.mutual_synergy.percentage} duels={profile.mutual_synergy.shared_duels_count} />
             ) : (
               <p className="text-xs text-on-surface-variant py-2">
                 You haven't played a duel against {profile.alias} yet. Challenge them to test your compatibility!
@@ -202,10 +213,11 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({
                 Shared Duel History
               </span>
               <div className="flex flex-col gap-1.5 max-h-36 overflow-y-auto">
-                {profile.mutual_synergy.shared_history.map((m) => (
+                {profile.mutual_synergy.shared_history.map((m, mi) => (
                   <div
                     key={m.match_id}
-                    className="flex items-center justify-between p-2.5 rounded-md bg-surface-container border border-glass-border text-xs"
+                    style={{ animationDelay: `${Math.min(mi, 8) * 55}ms` }}
+                    className="animate-rise-stagger flex items-center justify-between p-2.5 rounded-md bg-surface-container border border-glass-border text-xs"
                   >
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-[16px] text-primary">sports_esports</span>
@@ -223,7 +235,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({
           )}
 
           {/* Footer Actions: Rematch, Block, Report */}
-          <div className="flex items-center justify-between pt-3 border-t border-glass-border">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-glass-border">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -267,5 +279,27 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({
         </div>
       )}
     </ModalShell>
+  );
+};
+
+const SynergyMeter: React.FC<{ percentage: number; duels: number }> = ({ percentage, duels }) => {
+  const shown = useCountUp(percentage, true);
+  return (
+    <div className="flex items-center gap-4 mt-1">
+      <div className="text-3xl font-display font-bold text-primary tabular-nums">
+        {shown}%
+      </div>
+      <div className="flex-1">
+        <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] rounded-full"
+            style={{ width: `${shown}%` }}
+          />
+        </div>
+        <span className="text-[11px] text-on-surface-variant mt-1 block">
+          Based on {duels} shared 7-choice {duels === 1 ? 'duel' : 'duels'}.
+        </span>
+      </div>
+    </div>
   );
 };
