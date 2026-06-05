@@ -85,7 +85,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ opponentName, onClose,
             ))}
           </div>
 
-          <div className="pt-2 flex justify-end gap-2">
+          <div className="pt-2 flex flex-wrap justify-end gap-2">
             <Button
               type="button"
               variant="secondary-solid"
