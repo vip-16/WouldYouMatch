@@ -678,7 +678,7 @@ export const DirectMessageModal: React.FC<DirectMessageModalProps> = ({
               </div>
 
               {/* Message Input Bar (Zero red rectangles on focus) */}
-              <div className="p-3 border-t border-glass-border bg-surface-container-lowest relative shrink-0">
+              <div className="pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-glass-border bg-surface-container-lowest relative shrink-0">
                 {/* Emoji Picker Popover */}
                 {showEmojiPicker && (
                   <div
