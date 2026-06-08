@@ -54,6 +54,7 @@ class ConnectionManager:
             return
         if current is not None:
             del self.active_connections[user_id]
+        engine.dequeue_player(user_id)
         if user_id in engine.users:
             engine.users[user_id].connected = False
             engine.users[user_id].websocket = None
