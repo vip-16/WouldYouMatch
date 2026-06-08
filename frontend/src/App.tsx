@@ -76,6 +76,13 @@ export const App: React.FC = () => {
   const userRef = useRef<User | null>(null);
   const matchIdRef = useRef<string | null>(null);
   const currentRoundRef = useRef<number>(1);
+  // A torn identity is catastrophic: the WS ticket binds the socket to a
+  // different user than `user` state, so messages get attributed to the
+  // opponent and the WS rejects the ticket (401 "Token does not match user").
+  // Concurrent bootstraps (StrictMode double-mount, a fast "Find a match"
+  // click, or a 401 retry) must share ONE in-flight bootstrap instead of each
+  // minting their own guest and racing the token/user writes.
+  const initialUserPromiseRef = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
     userRef.current = user;
@@ -139,6 +146,17 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, [handleLocationChange]);
 
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const activeMatchId = matchIdRef.current;
+      if (activeMatchId) {
+        wsClient.send('chat.leave', { match_id: activeMatchId });
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
   const navigateTo = (path: string) => {
     window.history.pushState({}, '', path);
     handleLocationChange();
@@ -169,61 +187,69 @@ export const App: React.FC = () => {
     fetchInitialUser();
   }, []);
 
-  const fetchInitialUser = async () => {
-    // Guests are per-tab. localStorage is shared by every tab on a device,
-    // which previously made two guest tabs impersonate the same player.
-    const sessionGuestId = sessionStorage.getItem('wyrmg_guest_user_id');
-    const savedUserId = sessionGuestId || localStorage.getItem('wouldyoumatch_user_id') || localStorage.getItem('wyrmg_user_id');
-    if (savedUserId) {
+  const fetchInitialUser = () => {
+    if (initialUserPromiseRef.current) return initialUserPromiseRef.current;
+
+    initialUserPromiseRef.current = (async () => {
+      // Guests are per-tab. localStorage is shared by every tab on a device,
+      // which previously made two guest tabs impersonate the same player.
+      const sessionGuestId = sessionStorage.getItem('wyrmg_guest_user_id');
+      const savedUserId = sessionGuestId || localStorage.getItem('wouldyoumatch_user_id') || localStorage.getItem('wyrmg_user_id');
+      if (savedUserId) {
+        try {
+          const res = await apiFetch(`/api/me?user_id=${savedUserId}`);
+          if (res.ok) {
+            const data = await res.json();
+            // A legacy localStorage guest must not be reused in a newly opened
+            // tab. Registered identities remain persistent across tabs.
+            if (!data.is_guest || sessionGuestId) {
+              // A player can press Find Match before React has committed the
+              // state update. Keep the live identity available to that handler.
+              userRef.current = data;
+              setUser(data);
+              setUnreadDMCount(data.total_unread_messages || 0);
+              return;
+            }
+          } else if (res.status === 401) {
+            // The cached identity's token died (e.g. backend restart). A dead
+            // guest must not be replayed on the next load — fall through and
+            // mint a fresh one. Registered users simply need to sign in again.
+            clearAuthToken();
+            localStorage.removeItem('wouldyoumatch_user_id');
+            localStorage.removeItem('wyrmg_user_id');
+            sessionStorage.removeItem('wyrmg_guest_user_id');
+          }
+        } catch (e) {
+          console.warn('Could not restore saved session, creating fresh:', e);
+        }
+      }
+
       try {
-        const res = await apiFetch(`/api/me?user_id=${savedUserId}`);
+        const res = await apiFetch(`/api/auth/guest`, {
+          method: 'POST',
+          body: JSON.stringify({ device_fingerprint: 'browser_fp_123' }),
+        });
         if (res.ok) {
           const data = await res.json();
-          // A legacy localStorage guest must not be reused in a newly opened
-          // tab. Registered identities remain persistent across tabs.
-          if (!data.is_guest || sessionGuestId) {
-            // A player can press Find Match before React has committed the
-            // state update. Keep the live identity available to that handler.
-            userRef.current = data;
-            setUser(data);
-            setUnreadDMCount(data.total_unread_messages || 0);
-            return;
-          }
-        } else if (res.status === 401) {
-          // The cached identity's token died (e.g. backend restart). A dead
-          // guest must not be replayed on the next load — fall through and
-          // mint a fresh one. Registered users simply need to sign in again.
-          clearAuthToken();
-          localStorage.removeItem('wouldyoumatch_user_id');
-          localStorage.removeItem('wyrmg_user_id');
-          sessionStorage.removeItem('wyrmg_guest_user_id');
+          if (data.access_token) setAuthToken(data.access_token);
+          // Guest creation and matchmaking can happen in the same click. Set
+          // the ref synchronously so connectWebSocket can ticket this guest.
+          userRef.current = data.user;
+          setUser(data.user);
+          setServerUnreachable(false);
+          sessionStorage.setItem('wyrmg_guest_user_id', data.user.id);
+          refreshUserProfile(data.user.id);
+        } else {
+          setServerUnreachable(true);
         }
-      } catch (e) {
-        console.warn('Could not restore saved session, creating fresh:', e);
-      }
-    }
-
-    try {
-      const res = await apiFetch(`/api/auth/guest`, {
-        method: 'POST',
-        body: JSON.stringify({ device_fingerprint: 'browser_fp_123' }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.access_token) setAuthToken(data.access_token);
-        // Guest creation and matchmaking can happen in the same click. Set
-        // the ref synchronously so connectWebSocket can ticket this guest.
-        userRef.current = data.user;
-        setUser(data.user);
-        setServerUnreachable(false);
-        sessionStorage.setItem('wyrmg_guest_user_id', data.user.id);
-        refreshUserProfile(data.user.id);
-      } else {
+      } catch {
         setServerUnreachable(true);
       }
-    } catch {
-      setServerUnreachable(true);
-    }
+    })().finally(() => {
+      initialUserPromiseRef.current = null;
+    });
+
+    return initialUserPromiseRef.current;
   };
 
   const refreshUserProfile = async (userId: string) => {

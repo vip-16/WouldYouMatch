@@ -43,6 +43,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     onSubmitAnswer(choice);
   };
 
+  // Auto-lock a choice if timer reaches 0 so the duel never gets stuck on AFK
+  useEffect(() => {
+    if (timeLeft === 0 && !selectedChoice && !lastResult) {
+      const autoChoice: 'left' | 'right' = Math.random() < 0.5 ? 'left' : 'right';
+      handleSelect(autoChoice);
+    }
+  }, [timeLeft, selectedChoice, lastResult]);
+
   // Keyboard accessibility for fast arcade dilemma duel choices
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

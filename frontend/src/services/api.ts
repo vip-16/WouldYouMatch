@@ -12,9 +12,9 @@ export const API_BASE: string = (env.VITE_API_URL || 'http://localhost:8000').re
 export const getAuthToken = (): string | null => {
   try {
     return (
+      sessionStorage.getItem('wyrmg_auth_token') ||
       localStorage.getItem('wouldyoumatch_auth_token') ||
-      localStorage.getItem('wyrmg_auth_token') ||
-      sessionStorage.getItem('wyrmg_auth_token')
+      localStorage.getItem('wyrmg_auth_token')
     );
   } catch {
     return null;
@@ -23,9 +23,13 @@ export const getAuthToken = (): string | null => {
 
 export const setAuthToken = (token: string) => {
   try {
-    localStorage.setItem('wouldyoumatch_auth_token', token);
-    localStorage.setItem('wyrmg_auth_token', token);
     sessionStorage.setItem('wyrmg_auth_token', token);
+    // Only persist registered account tokens across tabs in localStorage.
+    // Guest tokens must remain tab-isolated so two tabs never clobber each other.
+    if (!token.startsWith('jwt_guest_')) {
+      localStorage.setItem('wouldyoumatch_auth_token', token);
+      localStorage.setItem('wyrmg_auth_token', token);
+    }
   } catch {
     /* storage unavailable */
   }
@@ -33,9 +37,9 @@ export const setAuthToken = (token: string) => {
 
 export const clearAuthToken = () => {
   try {
+    sessionStorage.removeItem('wyrmg_auth_token');
     localStorage.removeItem('wouldyoumatch_auth_token');
     localStorage.removeItem('wyrmg_auth_token');
-    sessionStorage.removeItem('wyrmg_auth_token');
   } catch {
     /* noop */
   }
