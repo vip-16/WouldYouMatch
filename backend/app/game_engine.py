@@ -77,6 +77,8 @@ class MatchState:
         self.friends: set = set()
         self.rematch_requests: set = set()
         self.blocks: set = set()
+        self.chat_unlocked: bool = False
+        self.players_left: Set[str] = set()
 
     def submit_answer(self, user_id: str, choice: str) -> bool:
         if self.status != "in_progress":
