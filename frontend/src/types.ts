@@ -122,6 +122,16 @@ export interface RoundResult {
   vibe_score: number;
 }
 
+export interface RoundSummaryItem {
+  round: number;
+  question_id: string;
+  left: string;
+  right: string;
+  answers: Record<string, 'left' | 'right'>;
+  agreed: boolean;
+  timestamp: number;
+}
+
 export interface Message {
   id: string;
   room_id: string;
@@ -152,3 +162,4 @@ export interface WSFrame {
   ts: number;
   payload: any;
 }
+
