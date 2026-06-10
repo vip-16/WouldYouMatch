@@ -116,7 +116,10 @@ class MatchState:
         self.current_round_idx += 1
         if self.current_round_idx >= self.round_count:
             self.status = "completed"
-            self._inject_icebreaker_message()
+            # Server-side enforcement: 4+ matching answers unlocks chat; 0-3 stays locked
+            self.chat_unlocked = (self.vibe_score >= 4)
+            if self.chat_unlocked:
+                self._inject_icebreaker_message()
             # Record match in global history
             engine.record_completed_match(self)
 
