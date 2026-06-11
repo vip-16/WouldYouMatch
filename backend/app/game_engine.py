@@ -496,6 +496,7 @@ class WouldYouMatchEngine:
             match_id = self.user_match_map.pop(user_id, None)
             if match_id and match_id in self.matches:
                 match = self.matches[match_id]
+                match.players_left.add(user_id)
                 # If match already completed, just detach; keep history
                 if match.status == "completed":
                     return match_id
