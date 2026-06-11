@@ -205,6 +205,7 @@ async def handle_websocket_message(user_id: str, data_str: str):
 
                 if match.status == "completed":
                     engine.analytics_events["match_completed"] += 1
+                    chat_unlocked = getattr(match, "chat_unlocked", match.vibe_score >= 4)
                     for uid in p_ids:
                         opp_id = [o for o in p_ids if o != uid][0]
                         opp = match.players[opp_id]
@@ -214,7 +215,9 @@ async def handle_websocket_message(user_id: str, data_str: str):
                             "vibe_score": match.vibe_score,
                             "round_count": match.round_count,
                             "room_id": match.room_id,
-                            "icebreaker": match.chat_messages[0] if match.chat_messages else None,
+                            "chat_unlocked": chat_unlocked,
+                            "rounds_summary": match.answers,
+                            "icebreaker": match.chat_messages[0] if (chat_unlocked and match.chat_messages) else None,
                             "opponent": {
                                 "id": opp.user_id,
                                 "alias": opp.alias,
