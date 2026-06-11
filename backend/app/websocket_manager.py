@@ -59,6 +59,32 @@ class ConnectionManager:
             engine.users[user_id].connected = False
             engine.users[user_id].websocket = None
 
+    async def handle_disconnect(self, user_id: str, websocket: Optional[WebSocket] = None):
+        current = self.active_connections.get(user_id)
+        if websocket is not None and current is not websocket:
+            return
+        self.disconnect(user_id, websocket)
+
+        # Immediately notify opponent if player was in an active duel/room
+        match_id = engine.user_match_map.get(user_id)
+        if match_id and match_id in engine.matches:
+            match = engine.matches[match_id]
+            if match.status in ("in_progress", "completed"):
+                match.players_left.add(user_id)
+                others = [o for o in match.players.keys() if o != user_id]
+                opp_id = others[0] if others else None
+                leaver_alias = match.players[user_id].alias if user_id in match.players else "Opponent"
+                if opp_id:
+                    await self.send_event(opp_id, "opponent.left", {
+                        "room_id": match.room_id,
+                        "match_id": match.match_id,
+                        "user_id": user_id,
+                        "alias": leaver_alias,
+                        "reason": "disconnected"
+                    })
+                if match.status == "in_progress":
+                    engine.leave_match(user_id)
+
     async def send_event(self, user_id: str, event_type: str, payload: Dict[str, Any]):
         ws = self.active_connections.get(user_id)
         if ws:
