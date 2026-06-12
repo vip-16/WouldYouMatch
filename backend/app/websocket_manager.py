@@ -417,15 +417,26 @@ async def handle_websocket_message(user_id: str, data_str: str):
         try:
             if match_id in engine.matches:
                 match = engine.matches[match_id]
+                match.players_left.add(user_id)
                 others = [o for o in match.players.keys() if o != user_id]
                 opp_id = others[0] if others else None
+                leaver_alias = match.players[user_id].alias if user_id in match.players else "Opponent"
                 if opp_id:
+                    await ws_manager.send_event(opp_id, "opponent.left", {
+                        "room_id": match.room_id,
+                        "match_id": match.match_id,
+                        "alias": leaver_alias,
+                        "reason": "left"
+                    })
                     await ws_manager.send_event(opp_id, "chat.closed", {
                         "room_id": match.room_id,
-                        "by": "opponent"
+                        "match_id": match.match_id,
+                        "by": "opponent",
+                        "alias": leaver_alias
                     })
                 await ws_manager.send_event(user_id, "chat.closed", {
                     "room_id": match.room_id,
+                    "match_id": match.match_id,
                     "by": "you"
                 })
             if hasattr(engine, "leave_match"):
