@@ -245,6 +245,19 @@ async def handle_websocket_message(user_id: str, data_str: str):
         
         if body and match_id in engine.matches:
             match = engine.matches[match_id]
+            # Server-side enforcement: 4+ matching answers unlocks chat; 0-3 stays locked
+            if match.vibe_score < 4 or not getattr(match, "chat_unlocked", False):
+                await ws_manager.send_event(user_id, "chat.error", {
+                    "code": "CHAT_LOCKED",
+                    "detail": "Chat is locked: at least 4 matching answers are required to chat."
+                })
+                return
+            if getattr(match, "players_left", None) and len(match.players_left) > 0:
+                await ws_manager.send_event(user_id, "chat.error", {
+                    "code": "CHAT_CLOSED",
+                    "detail": "Cannot send message: the other player has left the match."
+                })
+                return
             if len(match.chat_messages) <= 1:
                 engine.analytics_events["first_message_sent"] += 1
                 
