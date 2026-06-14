@@ -18,7 +18,7 @@ import { TermsOfServiceModal } from './components/TermsOfServiceModal';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { NotFoundScreen } from './components/NotFoundScreen';
 import { trackPageView } from './services/analytics';
-import { User, Question, RoundResult, Message, AppStage, WSFrame } from './types';
+import { User, Question, RoundResult, RoundSummaryItem, Message, AppStage, WSFrame } from './types';
 import { wsClient } from './services/websocket';
 import { sounds } from './services/sound';
 import { API_BASE, apiFetch, setAuthToken, clearAuthToken } from './services/api';
@@ -40,6 +40,9 @@ export const App: React.FC = () => {
   const [opponentAnswered, setOpponentAnswered] = useState<boolean>(false);
   const [lastResult, setLastResult] = useState<RoundResult | null>(null);
   const [vibeScore, setVibeScore] = useState<number>(0);
+  const [chatUnlocked, setChatUnlocked] = useState<boolean>(false);
+  const [roundsSummary, setRoundsSummary] = useState<RoundSummaryItem[]>([]);
+  const [opponentLeft, setOpponentLeft] = useState<{ alias: string; reason: string } | null>(null);
 
   // Chat & Social State
   const [messages, setMessages] = useState<Message[]>([]);
@@ -357,6 +360,9 @@ export const App: React.FC = () => {
       setOpponent(payload.opponent);
       setTotalRounds(payload.round_count || 7);
       setVibeScore(0);
+      setChatUnlocked(false);
+      setRoundsSummary([]);
+      setOpponentLeft(null);
       setMessages([]);
       setConnectState('none');
       setRematchState('none');
