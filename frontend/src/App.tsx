@@ -381,10 +381,23 @@ export const App: React.FC = () => {
       setVibeScore(payload.vibe_score);
     } else if (type === 'match.complete') {
       setVibeScore(payload.vibe_score);
+      setChatUnlocked(Boolean(payload.chat_unlocked));
+      setRoundsSummary(payload.rounds_summary || []);
+      setOpponentLeft(null);
       setStage('postgame');
       if (payload.icebreaker) {
         setMessages([payload.icebreaker]);
+      } else {
+        setMessages([]);
       }
+    } else if (type === 'opponent.left') {
+      sounds.playNotification();
+      setOpponentLeft({
+        alias: payload.alias || 'Opponent',
+        reason: payload.reason || 'disconnected',
+      });
+      setChallengeNotice(`${payload.alias || 'Your opponent'} left the match.`);
+      setTimeout(() => setChallengeNotice(null), 5000);
     } else if (type === 'message.receive') {
       setMessages((prev) => [...prev, payload]);
       if (payload.sender_id !== userRef.current?.id && payload.sender_id !== 'system') {
@@ -405,7 +418,26 @@ export const App: React.FC = () => {
       setRematchState(payload.state);
       sounds.playNotification();
     } else if (type === 'chat.closed') {
-      setStage('landing');
+      if (payload.by === 'you') {
+        setStage('landing');
+        matchIdRef.current = null;
+        setMatchId(null);
+        setOpponent(null);
+        setOpponentLeft(null);
+        setRoundsSummary([]);
+        setChatUnlocked(false);
+      } else {
+        setOpponentLeft({
+          alias: payload.alias || 'Opponent',
+          reason: 'left',
+        });
+        setChallengeNotice(`${payload.alias || 'Your opponent'} left the room.`);
+        setTimeout(() => setChallengeNotice(null), 5000);
+      }
+    } else if (type === 'chat.error') {
+      sounds.playNotification();
+      setChallengeNotice(payload.detail || 'Chat error');
+      setTimeout(() => setChallengeNotice(null), 4000);
     } else if (type === 'dm.receive') {
       setUnreadDMCount((prev) => prev + 1);
       sounds.playMessageReceived();
