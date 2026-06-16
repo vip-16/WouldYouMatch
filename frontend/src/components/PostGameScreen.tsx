@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { User, Message } from '../types';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { User, Message, RoundSummaryItem } from '../types';
 import { Avatar } from './ui/Avatar';
 import {
   Send,
@@ -12,7 +12,13 @@ import {
   Smile,
   X,
   UserCheck,
-  ChevronDown
+  ChevronDown,
+  Lock,
+  Compass,
+  ArrowRight,
+  ChevronUp,
+  AlertCircle,
+  CheckCheck
 } from 'lucide-react';
 
 interface PostGameScreenProps {
@@ -21,6 +27,9 @@ interface PostGameScreenProps {
   shareHash?: string;
   opponent: User | null;
   currentUser: User | null;
+  chatUnlocked: boolean;
+  roundsSummary?: RoundSummaryItem[];
+  opponentLeft: { alias: string; reason?: string } | null;
   messages: Message[];
   onSendMessage: (body: string) => void;
   onReactMessage: (msgId: string, emoji: string) => void;
@@ -31,6 +40,7 @@ interface PostGameScreenProps {
   onRematchRequest: () => void;
   rematchState: 'none' | 'requested' | 'pending' | 'mutual';
   onLeave: () => void;
+  onFindMatch?: () => void;
   onOpenProfile: () => void;
   onOpenReport: () => void;
   onOpenShare: () => void;
@@ -45,13 +55,12 @@ interface Toast {
 }
 
 const QUICK_PROMPTS = [
-  'Hey There!',
-  'How are you?',
-  'I am doing well, Can we meet tomorrow?',
-  'Why did you pick that one?',
-  'Round 3 was wild!',
+  'Hey there! Glad we matched!',
+  'Why did you pick that one in round 3?',
   'We think way too alike 🔥',
+  'What made you choose that last answer?',
   'Run it back for a rematch! 🎮',
+  'Are you always this decisive?',
 ];
 
 const EMOJI_PALETTE = ['👍', '❤️', '😂', '🔥', '😮', '💀', '🎉', '👀', '✨', '🙌', '💯', '🤝'];
@@ -61,6 +70,9 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
   totalRounds,
   opponent,
   currentUser,
+  chatUnlocked,
+  roundsSummary = [],
+  opponentLeft,
   messages,
   onSendMessage,
   onReactMessage,
@@ -71,6 +83,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
   onRematchRequest,
   rematchState,
   onLeave,
+  onFindMatch,
   onOpenProfile,
   onOpenReport,
   onOpenShare,
@@ -79,6 +92,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
   const [showPrompts, setShowPrompts] = useState(false);
+  const [showRecapDrawer, setShowRecapDrawer] = useState(false);
   const [activeReactionMsgId, setActiveReactionMsgId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -93,9 +107,15 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
   const prevRematchState = useRef(rematchState);
   const prevMessagesLength = useRef(messages.length);
 
-  const targetPercentage = Math.round((vibeScore / totalRounds) * 100);
+  const targetPercentage = Math.round((vibeScore / Math.max(totalRounds, 1)) * 100);
 
-  // Format time matching aesthetic: "Today, 8.30pm"
+  // Helper to extract option text from left/right based on user answer
+  const getAnswerText = (item: RoundSummaryItem, side?: string) => {
+    if (!side) return 'No answer';
+    return side === 'left' ? item.left : item.right;
+  };
+
+  // Format time: "Today, 8:30 pm"
   const formatMessageTime = useCallback((ts?: number) => {
     const d = ts ? new Date(ts < 1e11 ? ts * 1000 : ts) : new Date();
     const now = new Date();
@@ -106,7 +126,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
     const ampm = hours >= 12 ? 'pm' : 'am';
     const formattedHours = hours % 12 || 12;
     const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-    const timeStr = `${formattedHours}.${formattedMinutes}${ampm}`;
+    const timeStr = `${formattedHours}:${formattedMinutes} ${ampm}`;
 
     return `${isToday ? 'Today' : d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${timeStr}`;
   }, []);
