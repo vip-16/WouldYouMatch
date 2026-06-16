@@ -139,7 +139,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
 
   const dismissToast = (id: string) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  // Dismiss dropdowns / popovers on outside click
+  // Dismiss dropdowns on outside click
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
@@ -161,6 +161,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
         setActiveReactionMsgId(null);
         setShowOverflowMenu(false);
         setShowPrompts(false);
+        setShowRecapDrawer(false);
       }
     };
 
@@ -220,6 +221,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
 
   const handleSend = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (opponentLeft) return;
     const trimmed = inputBody.trim();
     if (!trimmed) return;
 
@@ -239,6 +241,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (opponentLeft) return;
     setInputBody(e.target.value);
     onTyping(true);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
@@ -247,6 +250,274 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
     }, 1800);
   };
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCREEN VARIANT 1: 0–3 MATCHES (CHAT LOCKED / NOT MEANT TO CHAT)
+  // ──────────────────────────────────────────────────────────────────────────
+  if (!chatUnlocked) {
+    return (
+      <div className="organic-page flex-1 min-h-0 w-full h-full flex flex-col bg-background text-on-surface select-text relative overflow-y-auto">
+        {/* Global Toast Layer */}
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 max-w-md w-full px-4 pointer-events-none">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className="pointer-events-auto bg-zinc-900/95 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs py-2.5 px-4 rounded-2xl shadow-xl flex items-center justify-between gap-3 animate-fade-in border border-zinc-700/40"
+            >
+              <span className="font-medium truncate">{toast.text}</span>
+              <button
+                onClick={() => dismissToast(toast.id)}
+                className="opacity-70 hover:opacity-100 p-0.5 rounded-full cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Minimal Navigation Bar */}
+        <header className="sticky top-0 z-20 w-full bg-surface/80 backdrop-blur-xl border-b border-glass-border px-4 md:px-8 py-3.5 flex items-center justify-between shrink-0 shadow-elevation-1">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onOpenProfile}
+              className="relative cursor-pointer rounded-full shrink-0 group focus:outline-none"
+              title="View Opponent Profile"
+            >
+              <Avatar
+                alias={opponent?.alias || 'Opponent'}
+                size="sm"
+                isGradient={true}
+                className="w-8 h-8 border border-glass-border"
+              />
+            </button>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-bold text-on-surface truncate leading-tight font-display">
+                {opponent?.alias || 'Opponent'}
+              </span>
+              <span className="text-[11px] text-on-surface-variant font-mono">
+                {vibeScore} of {totalRounds} matched
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onOpenShare}
+              className="p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-transparent hover:border-glass-border transition-colors cursor-pointer"
+              title="Share Scorecard"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onLeave}
+              className="p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-transparent hover:border-glass-border transition-colors cursor-pointer"
+              title="Exit to Lobby"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
+
+        {/* Main Content: Hero Result */}
+        <div className="max-w-2xl w-full mx-auto px-4 py-8 flex flex-col items-center gap-8">
+          {/* Opponent Left Notice (if leaver occurred) */}
+          {opponentLeft && (
+            <div className="w-full bg-amber-500/10 border border-amber-500/25 rounded-2xl p-4 flex items-center gap-3.5 text-amber-900 dark:text-amber-200 animate-fade-in shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0 text-xs">
+                <p className="font-semibold text-sm leading-tight">
+                  {opponentLeft.alias} left the match
+                </p>
+                <p className="text-on-surface-variant/80 mt-0.5">
+                  The match has ended cleanly. Ready to explore another duel?
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Locked Hero Card */}
+          <div className="w-full bg-surface-container-low border border-glass-border rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden shadow-elevation-1">
+            {/* Background subtle radial glow */}
+            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Lock Badge */}
+            <div className="relative inline-flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-surface-container-high border border-glass-border flex items-center justify-center shadow-inner">
+                <Lock className="w-8 h-8 text-on-surface-variant" />
+              </div>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-on-surface tracking-tight">
+              Not Meant to Chat
+            </h1>
+
+            <p className="text-sm text-on-surface-variant max-w-md mx-auto mt-2 leading-relaxed">
+              You and <strong className="text-on-surface font-semibold">{opponent?.alias || 'your opponent'}</strong> agreed
+              on <strong className="text-on-surface font-semibold">{vibeScore} of {totalRounds}</strong> dilemmas.
+              A minimum of <strong className="text-primary font-semibold">4 matching answers</strong> is required to unlock sanctuary chat.
+            </p>
+
+            {/* Synergy Gauge Dots */}
+            <div className="mt-6 flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalRounds }).map((_, i) => {
+                  const isMatch = i < vibeScore;
+                  return (
+                    <div
+                      key={i}
+                      className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
+                        isMatch
+                          ? 'bg-primary ring-2 ring-primary/20 scale-110'
+                          : 'bg-surface-container-highest border border-glass-border'
+                      }`}
+                      title={isMatch ? `Round ${i + 1}: Matched` : `Round ${i + 1}: Diverged`}
+                    />
+                  );
+                })}
+              </div>
+              <span className="text-xs font-mono font-medium text-on-surface-variant mt-1">
+                {vibeScore} / {totalRounds} matches ({targetPercentage}%) • 4 needed to unlock
+              </span>
+            </div>
+
+            {/* Primary Action Buttons */}
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              {onFindMatch && (
+                <button
+                  onClick={onFindMatch}
+                  className="w-full sm:w-auto px-6 py-3 rounded-full bg-primary hover:bg-primary-container text-on-primary font-semibold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
+                >
+                  <Compass className="w-4 h-4" />
+                  <span>Find Another Opponent</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                onClick={onOpenShare}
+                className="w-full sm:w-auto px-5 py-3 rounded-full bg-surface-container hover:bg-surface-container-high border border-glass-border text-on-surface font-medium text-sm flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+              >
+                <Share2 className="w-4 h-4 text-on-surface-variant" />
+                <span>Share Result</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Dilemma Breakdown Section */}
+          {roundsSummary.length > 0 && (
+            <div className="w-full flex flex-col gap-3">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-sm font-bold font-display uppercase tracking-wider text-on-surface-variant">
+                  Round-by-Round Breakdown
+                </h2>
+                <span className="text-xs text-on-surface-variant font-mono">
+                  {vibeScore} matched • {roundsSummary.length - vibeScore} diverged
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                {roundsSummary.map((item, idx) => {
+                  const isMatch = item.agreed;
+                  const mySide = currentUser ? item.answers[currentUser.id] : undefined;
+                  const oppSide = opponent ? item.answers[opponent.id] : undefined;
+                  const myText = getAnswerText(item, mySide);
+                  const oppText = getAnswerText(item, oppSide);
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-4 rounded-2xl border transition-all ${
+                        isMatch
+                          ? 'bg-surface-container-low border-emerald-500/20'
+                          : 'bg-surface-container-lowest/60 border-glass-border'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-mono font-medium text-on-surface-variant">
+                          Round {item.round}
+                        </span>
+                        <span
+                          className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                            isMatch
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25'
+                              : 'bg-surface-container text-on-surface-variant border border-glass-border'
+                          }`}
+                        >
+                          {isMatch ? (
+                            <>
+                              <Sparkles className="w-3 h-3" />
+                              <span>Matched</span>
+                            </>
+                          ) : (
+                            <span>Diverged</span>
+                          )}
+                        </span>
+                      </div>
+
+                      <p className="text-sm font-medium text-on-surface mb-2.5 leading-snug">
+                        {item.left} <span className="text-on-surface-variant/70 italic">vs</span> {item.right}
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <div
+                          className={`p-2.5 rounded-xl border ${
+                            isMatch
+                              ? 'bg-emerald-500/5 border-emerald-500/20'
+                              : 'bg-surface-container border-glass-border'
+                          }`}
+                        >
+                          <span className="text-[10px] uppercase tracking-wider font-mono text-on-surface-variant block mb-0.5">
+                            You Chose
+                          </span>
+                          <span className="font-medium text-on-surface">{myText}</span>
+                        </div>
+
+                        <div
+                          className={`p-2.5 rounded-xl border ${
+                            isMatch
+                              ? 'bg-emerald-500/5 border-emerald-500/20'
+                              : 'bg-surface-container border-glass-border'
+                          }`}
+                        >
+                          <span className="text-[10px] uppercase tracking-wider font-mono text-on-surface-variant block mb-0.5">
+                            {opponent?.alias || 'Opponent'} Chose
+                          </span>
+                          <span className="font-medium text-on-surface">{oppText}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Secondary Footer Links */}
+          <div className="flex items-center gap-4 text-xs text-on-surface-variant pb-8">
+            <button
+              onClick={onOpenReport}
+              className="hover:text-error transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              <span>Report User</span>
+            </button>
+            <span>•</span>
+            <button
+              onClick={onLeave}
+              className="hover:text-on-surface transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Exit to Home</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCREEN VARIANT 2: 4+ MATCHES (SANCTUARY CHAT UNLOCKED)
+  // ──────────────────────────────────────────────────────────────────────────
   return (
     <div className="organic-page flex-1 min-h-0 w-full h-full flex flex-col bg-background text-on-surface select-text relative overflow-hidden">
       {/* ════ Toast Notifications Layer ════ */}
@@ -280,10 +551,10 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
         ))}
       </div>
 
-      {/* ════ Website Chat Header ════ */}
-      <header className="sticky top-0 z-20 w-full bg-surface/78 backdrop-blur-xl border-b border-glass-border px-4 md:px-8 py-3.5 flex items-center justify-between shrink-0 shadow-elevation-1">
-        {/* Left: Opponent Identity & Match Synergy */}
-        <div className="flex items-center gap-3.5 min-w-0">
+      {/* ════ Polished Chat Header ════ */}
+      <header className="sticky top-0 z-20 w-full bg-surface/85 backdrop-blur-xl border-b border-glass-border px-4 md:px-8 py-3 flex items-center justify-between shrink-0 shadow-elevation-1">
+        {/* Left: Opponent Info & Resonance Badge */}
+        <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onOpenProfile}
             className="relative cursor-pointer rounded-full shrink-0 group focus:outline-none"
@@ -293,51 +564,86 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
               alias={opponent?.alias || 'Opponent'}
               size="md"
               showStatus={true}
-              statusColor={opponent ? 'online' : 'offline'}
+              statusColor={opponentLeft ? 'offline' : (opponent ? 'online' : 'offline')}
               isGradient={true}
               className="w-10 h-10 border border-glass-border"
             />
           </button>
 
           <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <span className="text-base font-bold text-on-surface truncate leading-tight font-display">
                 {opponent?.alias || 'Opponent'}
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono font-bold bg-primary/10 text-primary px-2.5 py-0.5 rounded-full border border-primary/20 shadow-sm">
-                ✦ {targetPercentage}% Synergy
+              <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold bg-primary/10 text-primary px-2.5 py-0.5 rounded-full border border-primary/20 shadow-2xs">
+                ✦ {targetPercentage}% Resonance
               </span>
             </div>
-            <span className="text-xs text-on-surface-variant leading-tight mt-0.5 font-normal">
-              Matched on <strong className="text-on-surface font-semibold">{vibeScore} of {totalRounds}</strong> choices
-            </span>
+            <div className="flex items-center gap-2 mt-0.5">
+              {opponentTyping && !opponentLeft ? (
+                <span className="text-xs text-primary font-medium flex items-center gap-1 animate-pulse">
+                  <span>typing</span>
+                  <span className="inline-flex gap-0.5">
+                    <span className="w-1 h-1 rounded-full bg-primary inline-block" />
+                    <span className="w-1 h-1 rounded-full bg-primary inline-block" />
+                    <span className="w-1 h-1 rounded-full bg-primary inline-block" />
+                  </span>
+                </span>
+              ) : opponentLeft ? (
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                  Disconnected / Left
+                </span>
+              ) : (
+                <span className="text-xs text-on-surface-variant leading-tight font-normal">
+                  Unlocked on <strong className="text-on-surface font-semibold">{vibeScore} of {totalRounds}</strong> matches
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Right: Meaningful Website Game Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right: Header Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Toggle Dilemma Recap */}
+          {roundsSummary.length > 0 && (
+            <button
+              onClick={() => setShowRecapDrawer((prev) => !prev)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer ${
+                showRecapDrawer
+                  ? 'bg-primary/15 text-primary border-primary/30'
+                  : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant border-glass-border'
+              }`}
+              title="Toggle Round Recap"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span className="hidden md:inline">Recap</span>
+              {showRecapDrawer ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          )}
+
           {/* Friend Connection Action */}
           {connectState === 'mutual' ? (
-            <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
               <UserCheck className="w-3.5 h-3.5" />
               <span>Friends</span>
             </span>
           ) : connectState === 'requested' ? (
-            <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container text-on-surface-variant border border-glass-border text-xs font-medium">
-              <span>Request Sent</span>
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant border border-glass-border text-xs font-medium">
+              <span>Requested</span>
             </span>
           ) : connectState === 'pending' ? (
             <button
               onClick={onConnectRequest}
-              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              <span>Accept Friend</span>
+              <span>Accept</span>
             </button>
           ) : (
             <button
               onClick={onConnectRequest}
-              className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+              disabled={Boolean(opponentLeft)}
+              className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
               title="Add as Friend"
             >
               <UserPlus className="w-3.5 h-3.5 text-on-surface-variant" />
@@ -347,13 +653,13 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
 
           {/* Rematch Action */}
           {rematchState === 'mutual' ? (
-            <span className="px-3 py-1.5 rounded-xl bg-primary/15 text-primary border border-primary/30 text-xs font-bold">
-              Rematch Active!
+            <span className="px-3 py-1.5 rounded-full bg-primary/15 text-primary border border-primary/30 text-xs font-bold">
+              Rematch!
             </span>
           ) : rematchState === 'pending' ? (
             <button
               onClick={onRematchRequest}
-              className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse"
+              className="px-3 py-1.5 rounded-full bg-primary hover:bg-primary-container text-on-primary text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Accept Rematch</span>
@@ -361,8 +667,8 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
           ) : (
             <button
               onClick={onRematchRequest}
-              disabled={rematchState === 'requested'}
-              className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              disabled={rematchState === 'requested' || Boolean(opponentLeft)}
+              className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
               title="Challenge to Rematch"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${rematchState === 'requested' ? 'animate-spin' : ''}`} />
@@ -381,7 +687,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
             <Share2 className="w-4 h-4" />
           </button>
 
-          {/* More Actions Dropdown (Report, Leave) */}
+          {/* Overflow Menu */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowOverflowMenu((prev) => !prev)}
