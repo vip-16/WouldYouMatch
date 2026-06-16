@@ -605,6 +605,9 @@ export const App: React.FC = () => {
     matchIdRef.current = null;
     setMatchId(null);
     setOpponent(null);
+    setOpponentLeft(null);
+    setChatUnlocked(false);
+    setRoundsSummary([]);
   };
 
   const handleBlockUser = async (targetId: string) => {
@@ -743,6 +746,24 @@ export const App: React.FC = () => {
             />
           )}
 
+          {/* Opponent Left In-Game Notice */}
+          {opponentLeft && stage === 'game' && (
+            <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full px-4 animate-slide-up">
+              <Banner
+                type="warning"
+                action={{
+                  label: 'Find New Match',
+                  onClick: () => {
+                    setOpponentLeft(null);
+                    handleFindMatch();
+                  },
+                }}
+              >
+                {opponentLeft.alias} left the match. This duel has ended.
+              </Banner>
+            </div>
+          )}
+
           {stage === 'postgame' && (
             <PostGameScreen
               vibeScore={vibeScore}
@@ -750,6 +771,9 @@ export const App: React.FC = () => {
               shareHash={shareHash}
               opponent={opponent}
               currentUser={user}
+              chatUnlocked={chatUnlocked}
+              roundsSummary={roundsSummary}
+              opponentLeft={opponentLeft}
               messages={messages}
               onSendMessage={handleSendMessage}
               onReactMessage={handleReactMessage}
@@ -760,6 +784,7 @@ export const App: React.FC = () => {
               onRematchRequest={handleRematchRequest}
               rematchState={rematchState}
               onLeave={handleLeaveMatch}
+              onFindMatch={handleFindMatch}
               onOpenProfile={() => {
                 if (opponent) setPublicProfileTargetId(opponent.id);
               }}
