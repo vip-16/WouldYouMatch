@@ -139,6 +139,31 @@ a:focus:not(:focus-visible) {
   }
 }
 
+/* ── Mobile Viewport & Touch Enhancements ── */
+@supports (min-height: 100dvh) {
+  .min-h-screen-dvh {
+    min-height: 100dvh;
+  }
+  .h-screen-dvh {
+    height: 100dvh;
+  }
+}
+
+@supports not (min-height: 100dvh) {
+  .min-h-screen-dvh {
+    min-height: 100vh;
+  }
+  .h-screen-dvh {
+    height: 100vh;
+  }
+}
+
+/* Ensure no child spills beyond the viewport horizontally */
+html, body, #root {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 /* ── Mobile: kill legacy tap-delay / double-tap zoom on controls ── */
 button,
 a,
