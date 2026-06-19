@@ -110,12 +110,12 @@ export const ModalShell: React.FC<ModalShellProps> = ({
         ? 'none'
         : 'height 0.36s cubic-bezier(0.32, 0.72, 0, 1), max-width 0.36s cubic-bezier(0.32, 0.72, 0, 1)',
     overflow: isTransitioning ? 'hidden' : isClamped ? 'auto' : 'visible',
-    maxHeight: 'calc(100vh - 2rem)',
+    maxHeight: 'calc(100dvh - 1.5rem)',
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-[#29243a]/45 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-backdrop-fade"
+      className="fixed inset-0 z-50 bg-[#29243a]/45 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-backdrop-fade"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
@@ -125,9 +125,9 @@ export const ModalShell: React.FC<ModalShellProps> = ({
     >
       <div
         style={modalStyle}
-        className={`w-full ${maxWidthStyles[maxWidth] || 'max-w-md'} bg-surface-container-lowest border border-glass-border rounded-[2.25rem_1.7rem_2.25rem_1.7rem] shadow-elevation-2 relative animate-modal-pop my-auto ${className || ''}`}
+        className={`w-full ${maxWidthStyles[maxWidth] || 'max-w-md'} bg-surface-container-lowest border border-glass-border rounded-[1.75rem_1.3rem_1.75rem_1.3rem] sm:rounded-[2.25rem_1.7rem_2.25rem_1.7rem] shadow-elevation-2 relative animate-modal-pop my-auto ${className || ''}`}
       >
-        <div ref={contentRef} className={`relative ${bodyClassName !== undefined ? bodyClassName : 'p-5 md:p-6'}`}>
+        <div ref={contentRef} className={`relative ${bodyClassName !== undefined ? bodyClassName : 'p-4 sm:p-5 md:p-6'}`}>
           {/* Close Button */}
           <Button
             variant="ghost-icon"

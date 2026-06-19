@@ -286,11 +286,11 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
         {/* ── Segmented Pill Tab Bar with sliding thumb ── */}
         <div
           ref={tabBarRef}
-          className="relative grid grid-cols-5 gap-1.5 sm:gap-2 bg-surface-container/60 p-1.5 rounded-xl border border-glass-border w-full"
+          className="relative grid grid-cols-5 gap-1 sm:gap-2 bg-surface-container/60 p-1 sm:p-1.5 rounded-xl border border-glass-border w-full"
         >
           <span
             aria-hidden="true"
-            className="absolute top-1.5 bottom-1.5 rounded-lg bg-surface-container-lowest border border-primary/25 shadow-elevation-1 transition-all duration-[380ms] ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+            className="absolute top-1 bottom-1 sm:top-1.5 sm:bottom-1.5 rounded-lg bg-surface-container-lowest border border-primary/25 shadow-elevation-1 transition-all duration-[380ms] ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
             style={{ left: thumb.left, width: thumb.width, opacity: thumb.visible ? 1 : 0 }}
           />
           {[
@@ -310,14 +310,14 @@ export const YouSpaceModal: React.FC<YouSpaceModalProps> = ({
                 }}
                 onClick={() => setActiveTab(tab.id as any)}
                 title={tab.label}
-                className={`relative z-10 w-full min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 sm:py-2.5 rounded-lg text-xs font-label-md transition-colors cursor-pointer ${
+                className={`relative z-10 w-full min-w-0 flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-2 sm:py-2.5 rounded-lg text-xs font-label-md transition-colors cursor-pointer ${
                   isActive
                     ? 'text-primary font-bold'
                     : 'text-on-surface-variant hover:text-on-surface font-medium'
                 }`}
               >
-                <Icon className={`w-4 h-4 shrink-0 transition-transform ${isActive ? 'scale-110 text-primary' : 'text-on-surface-variant'}`} />
-                <span className="hidden min-[500px]:inline whitespace-nowrap text-xs font-semibold">{tab.label}</span>
+                <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform ${isActive ? 'scale-110 text-primary' : 'text-on-surface-variant'}`} />
+                <span className="hidden min-[480px]:inline whitespace-nowrap text-xs font-semibold">{tab.label}</span>
                 {tab.count !== null && tab.count > 0 && (
                   <span
                     className="absolute top-1 right-1 min-[500px]:hidden w-1.5 h-1.5 rounded-full bg-primary"
