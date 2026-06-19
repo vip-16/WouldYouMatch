@@ -274,9 +274,9 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
           ))}
         </div>
 
-        {/* Minimal Navigation Bar */}
-        <header className="sticky top-0 z-20 w-full bg-surface/80 backdrop-blur-xl border-b border-glass-border px-4 md:px-8 py-3.5 flex items-center justify-between shrink-0 shadow-elevation-1">
-          <div className="flex items-center gap-3">
+      {/* Minimal Navigation Bar */}
+        <header className="sticky top-0 z-20 w-full bg-surface/80 backdrop-blur-xl border-b border-glass-border px-3 sm:px-6 md:px-8 py-2.5 sm:py-3.5 flex items-center justify-between shrink-0 shadow-elevation-1">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={onOpenProfile}
               className="relative cursor-pointer rounded-full shrink-0 group focus:outline-none"
@@ -290,26 +290,26 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
               />
             </button>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-bold text-on-surface truncate leading-tight font-display">
+              <span className="text-xs sm:text-sm font-bold text-on-surface truncate leading-tight font-display">
                 {opponent?.alias || 'Opponent'}
               </span>
-              <span className="text-[11px] text-on-surface-variant font-mono">
+              <span className="text-[10px] sm:text-[11px] text-on-surface-variant font-mono">
                 {vibeScore} of {totalRounds} matched
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <button
               onClick={onOpenShare}
-              className="p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-transparent hover:border-glass-border transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-transparent hover:border-glass-border transition-colors cursor-pointer"
               title="Share Scorecard"
             >
               <Share2 className="w-4 h-4" />
             </button>
             <button
               onClick={onLeave}
-              className="p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-transparent hover:border-glass-border transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-transparent hover:border-glass-border transition-colors cursor-pointer"
               title="Exit to Lobby"
             >
               <LogOut className="w-4 h-4" />
@@ -552,9 +552,9 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
       </div>
 
       {/* ════ Polished Chat Header ════ */}
-      <header className="sticky top-0 z-20 w-full bg-surface/85 backdrop-blur-xl border-b border-glass-border px-4 md:px-8 py-3 flex items-center justify-between shrink-0 shadow-elevation-1">
+      <header className="sticky top-0 z-20 w-full bg-surface/85 backdrop-blur-xl border-b border-glass-border px-3 sm:px-6 md:px-8 py-2.5 sm:py-3 flex items-center justify-between shrink-0 shadow-elevation-1">
         {/* Left: Opponent Info & Resonance Badge */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <button
             onClick={onOpenProfile}
             className="relative cursor-pointer rounded-full shrink-0 group focus:outline-none"
@@ -566,17 +566,17 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
               showStatus={true}
               statusColor={opponentLeft ? 'offline' : (opponent ? 'online' : 'offline')}
               isGradient={true}
-              className="w-10 h-10 border border-glass-border"
+              className="w-9 h-9 sm:w-10 sm:h-10 border border-glass-border"
             />
           </button>
 
           <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-bold text-on-surface truncate leading-tight font-display">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-sm sm:text-base font-bold text-on-surface truncate leading-tight font-display">
                 {opponent?.alias || 'Opponent'}
               </span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold bg-primary/10 text-primary px-2.5 py-0.5 rounded-full border border-primary/20 shadow-2xs">
-                ✦ {targetPercentage}% Resonance
+              <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-mono font-bold bg-primary/10 text-primary px-2 sm:px-2.5 py-0.5 rounded-full border border-primary/20 shadow-2xs">
+                ✦ {targetPercentage}%<span className="hidden sm:inline"> Resonance</span>
               </span>
             </div>
             <div className="flex items-center gap-2 mt-0.5">
@@ -594,8 +594,8 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
                   Disconnected / Left
                 </span>
               ) : (
-                <span className="text-xs text-on-surface-variant leading-tight font-normal">
-                  Unlocked on <strong className="text-on-surface font-semibold">{vibeScore} of {totalRounds}</strong> matches
+                <span className="text-[11px] sm:text-xs text-on-surface-variant leading-tight font-normal truncate">
+                  <strong className="text-on-surface font-semibold">{vibeScore}/{totalRounds}</strong> matches
                 </span>
               )}
             </div>
@@ -603,12 +603,12 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
         </div>
 
         {/* Right: Header Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Toggle Dilemma Recap */}
           {roundsSummary.length > 0 && (
             <button
               onClick={() => setShowRecapDrawer((prev) => !prev)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-2.5 py-1.5 sm:px-3 rounded-full text-xs font-medium border flex items-center gap-1 transition-all cursor-pointer ${
                 showRecapDrawer
                   ? 'bg-primary/15 text-primary border-primary/30'
                   : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant border-glass-border'
@@ -634,7 +634,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
           ) : connectState === 'pending' ? (
             <button
               onClick={onConnectRequest}
-              className="px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+              className="px-2.5 py-1.5 sm:px-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 transition-all cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>Accept</span>
@@ -643,7 +643,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
             <button
               onClick={onConnectRequest}
               disabled={Boolean(opponentLeft)}
-              className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
               title="Add as Friend"
             >
               <UserPlus className="w-3.5 h-3.5 text-on-surface-variant" />
@@ -653,22 +653,22 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
 
           {/* Rematch Action */}
           {rematchState === 'mutual' ? (
-            <span className="px-3 py-1.5 rounded-full bg-primary/15 text-primary border border-primary/30 text-xs font-bold">
+            <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-primary/15 text-primary border border-primary/30 text-xs font-bold">
               Rematch!
             </span>
           ) : rematchState === 'pending' ? (
             <button
               onClick={onRematchRequest}
-              className="px-3 py-1.5 rounded-full bg-primary hover:bg-primary-container text-on-primary text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse"
+              className="px-2.5 py-1.5 sm:px-3 rounded-full bg-primary hover:bg-primary-container text-on-primary text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Accept Rematch</span>
+              <span className="hidden sm:inline">Accept</span>
             </button>
           ) : (
             <button
               onClick={onRematchRequest}
               disabled={rematchState === 'requested' || Boolean(opponentLeft)}
-              className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-glass-border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
               title="Challenge to Rematch"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${rematchState === 'requested' ? 'animate-spin' : ''}`} />
@@ -681,7 +681,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
           {/* Share Scorecard */}
           <button
             onClick={onOpenShare}
-            className="p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-transparent hover:border-glass-border transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-transparent hover:border-glass-border transition-colors cursor-pointer"
             title="Share Duel Result"
           >
             <Share2 className="w-4 h-4" />
@@ -691,7 +691,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowOverflowMenu((prev) => !prev)}
-              className="p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-transparent hover:border-glass-border transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-transparent hover:border-glass-border transition-colors cursor-pointer"
               title="More Actions"
             >
               <ChevronDown className="w-4 h-4" />
@@ -728,7 +728,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
                   className="w-full px-3.5 py-2 text-left flex items-center gap-2.5 hover:bg-error/10 text-error cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Leave Chat Room</span>
+                  <span>Exit to Home</span>
                 </button>
               </div>
             )}
@@ -978,9 +978,9 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
       {showEmojiPicker && !opponentLeft && (
         <div
           ref={emojiPickerRef}
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-1/4 z-40 bg-surface-container-lowest p-3 shadow-elevation-2 border border-glass-border rounded-2xl animate-fade-in max-w-xs"
+          className="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-1/4 z-40 bg-surface-container-lowest p-3 shadow-elevation-2 border border-glass-border rounded-2xl animate-fade-in w-[min(calc(100vw-2rem),280px)]"
         >
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-6 gap-2 text-center">
             {EMOJI_PALETTE.map((emoji) => (
               <button
                 key={emoji}
@@ -1000,14 +1000,14 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
       )}
 
       {/* ════ Input Area / Composer Pill ════ */}
-      <footer className="w-full bg-surface/80 backdrop-blur-xl border-t border-glass-border px-4 md:px-8 py-3 shrink-0">
-        <form onSubmit={handleSend} className="max-w-3xl mx-auto flex items-center gap-2">
+      <footer className="w-full bg-surface/85 backdrop-blur-xl border-t border-glass-border px-3 sm:px-6 md:px-8 py-2.5 sm:py-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] shrink-0">
+        <form onSubmit={handleSend} className="max-w-3xl mx-auto flex items-center gap-1.5 sm:gap-2">
           {/* Quick Prompts Toggle */}
           <button
             type="button"
             disabled={Boolean(opponentLeft)}
             onClick={() => setShowPrompts((prev) => !prev)}
-            className={`p-2.5 rounded-full border transition-all cursor-pointer shrink-0 disabled:opacity-40 disabled:pointer-events-none ${
+            className={`p-2 sm:p-2.5 rounded-full border transition-all cursor-pointer shrink-0 disabled:opacity-40 disabled:pointer-events-none ${
               showPrompts
                 ? 'bg-primary/15 text-primary border-primary/30'
                 : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant border-glass-border'
@@ -1019,7 +1019,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
 
           {/* Pill Composer Input Wrapper */}
           <div
-            className={`flex-1 flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
+            className={`flex-1 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border transition-all ${
               opponentLeft
                 ? 'bg-surface-container-low border-glass-border opacity-60'
                 : 'bg-surface-container-lowest border-glass-border focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15'
@@ -1034,10 +1034,10 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
               disabled={Boolean(opponentLeft)}
               placeholder={
                 opponentLeft
-                  ? 'Opponent left the match. Chat is closed.'
+                  ? 'Opponent left. Chat closed.'
                   : `Message ${opponent?.alias || 'Opponent'}...`
               }
-              className="flex-1 bg-transparent text-on-surface placeholder:text-on-surface-variant/60 text-sm outline-none disabled:cursor-not-allowed"
+              className="flex-1 min-w-0 bg-transparent text-on-surface placeholder:text-on-surface-variant/60 text-sm outline-none disabled:cursor-not-allowed"
             />
 
             {/* Emoji Selector Button */}
@@ -1048,7 +1048,7 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
               className="text-on-surface-variant hover:text-on-surface transition-colors p-1 cursor-pointer shrink-0 disabled:opacity-40 disabled:pointer-events-none"
               title="Insert Emoji"
             >
-              <Smile className="w-5 h-5" />
+              <Smile className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 
@@ -1056,11 +1056,11 @@ export const PostGameScreen: React.FC<PostGameScreenProps> = ({
           <button
             type="submit"
             disabled={!inputBody.trim() || Boolean(opponentLeft)}
-            className="px-5 py-2.5 rounded-full bg-primary hover:bg-primary-container text-on-primary flex items-center gap-2 font-medium text-sm shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer shrink-0"
+            className="h-9 sm:h-10 px-3.5 sm:px-5 rounded-full bg-primary hover:bg-primary-container text-on-primary flex items-center gap-1.5 font-medium text-xs sm:text-sm shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer shrink-0"
             title="Send Message"
           >
             <span className="hidden sm:inline">Send</span>
-            <Send className="w-4 h-4" />
+            <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </form>
       </footer>
