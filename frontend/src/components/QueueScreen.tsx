@@ -47,9 +47,9 @@ export const QueueScreen: React.FC<QueueScreenProps> = ({ onCancel }) => {
   const isTakingLong = seconds >= 35;
 
   return (
-    <main className="organic-page relative z-10 flex-1 min-h-0 w-full flex flex-col items-center justify-center px-4 pt-16 pb-8">
-      <div className="organic-blob organic-blob--aqua w-80 h-80 right-[12%] top-[20%] opacity-50" aria-hidden="true" />
-      <Card className="w-full max-w-md p-8 flex flex-col items-center gap-6 text-center bg-surface-container-lowest/80 rounded-[3rem_2rem_3rem_2rem] border border-glass-border shadow-elevation-2 backdrop-blur-xl">
+    <main className="organic-page relative z-10 flex-1 min-h-0 w-full flex flex-col items-center justify-center px-4 pt-14 pb-6 overflow-x-hidden">
+      <div className="organic-blob organic-blob--aqua w-80 h-80 right-[12%] top-[20%] opacity-50 pointer-events-none" aria-hidden="true" />
+      <Card className="w-full max-w-md p-5 sm:p-8 flex flex-col items-center gap-5 sm:gap-6 text-center bg-surface-container-lowest/80 rounded-[2rem_1.4rem_2rem_1.4rem] sm:rounded-[3rem_2rem_3rem_2rem] border border-glass-border shadow-elevation-2 backdrop-blur-xl">
         {/* Category Pill Tag */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-glass-border text-xs font-mono font-bold text-on-surface">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
