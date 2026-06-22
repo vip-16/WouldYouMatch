@@ -10,7 +10,7 @@ import hmac
 import json
 import time
 import shutil
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List, Tuple, Set
 
 # Locate database file inside backend/data/ or custom DATABASE_PATH
 DB_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
@@ -104,6 +104,17 @@ def init_db():
                 created_at REAL NOT NULL
             );
         """)
+
+        # 6. User Seen Questions Table (guarantees lifetime uniqueness across players)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_seen_questions (
+                user_id TEXT NOT NULL,
+                question_id TEXT NOT NULL,
+                seen_at REAL NOT NULL,
+                PRIMARY KEY (user_id, question_id)
+            );
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_seen_user ON user_seen_questions(user_id);")
 
         conn.commit()
 
@@ -382,3 +393,67 @@ def db_load_all_friendships() -> Dict[str, Dict[str, Any]]:
             except Exception:
                 continue
     return friendships
+
+
+# ── Seen Questions Persistence Operations ──
+
+def db_record_seen_questions(user_id: str, question_ids: List[str]):
+    """Persists seen questions for a user so they are never repeated in future matches."""
+    if not user_id or not question_ids:
+        return
+    now = time.time()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.executemany("""
+            INSERT OR IGNORE INTO user_seen_questions (user_id, question_id, seen_at)
+            VALUES (?, ?, ?);
+        """, [(user_id, qid, now) for qid in question_ids])
+        conn.commit()
+
+def db_load_all_seen_questions() -> Dict[str, Set[str]]:
+    """
+    Loads all seen question history mapped by user_id -> Set[question_id].
+    Automatically backfills from existing match_history if user_seen_questions is empty.
+    """
+    history: Dict[str, Set[str]] = {}
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT user_id, question_id FROM user_seen_questions;")
+        rows = cursor.fetchall()
+        for row in rows:
+            uid = row["user_id"]
+            qid = row["question_id"]
+            if uid not in history:
+                history[uid] = set()
+            history[uid].add(qid)
+
+        # Backfill from match_history records if database has prior games not yet tracked in table
+        cursor.execute("SELECT user_id, data_json FROM match_history;")
+        mh_rows = cursor.fetchall()
+        backfill_records: List[Tuple[str, str, float]] = []
+        now = time.time()
+        for row in mh_rows:
+            uid = row["user_id"]
+            try:
+                data = json.loads(row["data_json"] or "{}")
+                rounds = data.get("rounds", [])
+                for r in rounds:
+                    qid = r.get("question_id")
+                    if qid:
+                        if uid not in history:
+                            history[uid] = set()
+                        if qid not in history[uid]:
+                            history[uid].add(qid)
+                            backfill_records.append((uid, qid, now))
+            except Exception:
+                continue
+
+        if backfill_records:
+            cursor.executemany("""
+                INSERT OR IGNORE INTO user_seen_questions (user_id, question_id, seen_at)
+                VALUES (?, ?, ?);
+            """, backfill_records)
+            conn.commit()
+
+    return history
+

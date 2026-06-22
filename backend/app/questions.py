@@ -17,6 +17,8 @@ logger = logging.getLogger("wouldyoumatch.questions")
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "questions_db.json")
 
+from app.db import db_record_seen_questions, db_load_all_seen_questions
+
 # Default AI seed bank (generated via Google Gemini in the signature style of wouldyourather.app)
 DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
     {
@@ -142,8 +144,8 @@ DEFAULT_QUESTIONS: List[Dict[str, Any]] = [
     }
 ]
 
-# Track seen questions per user: user_id -> Set of question_ids
-USER_SEEN_HISTORY: Dict[str, Set[str]] = {}
+# Track seen questions per user: user_id -> Set of question_ids (persisted in SQLite)
+USER_SEEN_HISTORY: Dict[str, Set[str]] = db_load_all_seen_questions()
 
 def _ensure_community_votes(q: Dict[str, Any]) -> bool:
     """Guarantees a real-vote counter on a question. Returns True if migrated."""
@@ -194,12 +196,16 @@ def save_questions(questions: List[Dict[str, Any]]):
 QUESTIONS: List[Dict[str, Any]] = load_questions()
 
 def record_user_seen(user_id: str, question_ids: List[str]):
-    """Records question IDs that a user has seen."""
-    if not user_id:
+    """Records question IDs that a user has seen in-memory and persistently in SQLite."""
+    if not user_id or not question_ids:
         return
     if user_id not in USER_SEEN_HISTORY:
         USER_SEEN_HISTORY[user_id] = set()
     USER_SEEN_HISTORY[user_id].update(question_ids)
+    try:
+        db_record_seen_questions(user_id, question_ids)
+    except Exception as e:
+        logger.error(f"Failed to persist seen questions for user {user_id}: {e}")
 
 def replenish_question_bank(count: int = 15, custom_instruction: Optional[str] = None) -> int:
     """
@@ -226,26 +232,29 @@ def replenish_question_bank(count: int = 15, custom_instruction: Optional[str] =
 def get_round_questions(count: int = 7, user_ids: Optional[List[str]] = None) -> List[Dict[str, Any]]:
     """
     Returns `count` questions for a match.
-    Filters out questions that either player in `user_ids` has already seen!
-    If unplayed question count is low, triggers auto-replenishment via AI.
+    Guarantees questions have never been seen by EITHER player in `user_ids`.
+    Proactively triggers Gemini AI replenishment if the unseen pool is running low.
     """
     global QUESTIONS
     active_pool = [q for q in QUESTIONS if q.get("active", True)]
 
-    # Collect set of seen IDs
+    # Collect set of all questions seen by ANY of the participating players
     seen_ids: Set[str] = set()
     if user_ids:
         for uid in user_ids:
-            if uid in USER_SEEN_HISTORY:
-                seen_ids.update(USER_SEEN_HISTORY[uid])
+            if uid:
+                user_seen = USER_SEEN_HISTORY.get(uid, set())
+                seen_ids.update(user_seen)
 
-    # Unseen candidates
+    # Candidates that neither player has ever seen
     unseen_pool = [q for q in active_pool if q["id"] not in seen_ids]
 
-    # If pool of fresh questions is smaller than needed, try auto-replenishing via Google AI
-    if len(unseen_pool) < count:
+    # Proactive replenishment: if unseen count is less than needed for this match (or close to running out),
+    # fetch fresh unique questions from Google Gemini AI
+    if len(unseen_pool) < count + 7:
         try:
-            added = replenish_question_bank(count=max(10, count))
+            replenish_count = max(15, (count * 2) - len(unseen_pool))
+            added = replenish_question_bank(count=replenish_count)
             if added > 0:
                 active_pool = [q for q in QUESTIONS if q.get("active", True)]
                 unseen_pool = [q for q in active_pool if q["id"] not in seen_ids]
@@ -256,17 +265,25 @@ def get_round_questions(count: int = 7, user_ids: Optional[List[str]] = None) ->
     if len(unseen_pool) >= count:
         selected = random.sample(unseen_pool, count)
     else:
+        # Fallback if AI is offline and question pool is depleted:
+        # Pick all available unseen first, then fill remaining with questions least seen across both players
         selected = list(unseen_pool)
-        remaining = [q for q in active_pool if q not in selected]
         needed = count - len(selected)
-        if remaining:
-            selected += random.sample(remaining, min(needed, len(remaining)))
+        
+        # Rank remaining questions by how many of the players have seen it (prefer questions seen by only 1 over 2)
+        remaining = [q for q in active_pool if q not in selected]
+        def seen_count(q: Dict[str, Any]) -> int:
+            return sum(1 for uid in (user_ids or []) if q["id"] in USER_SEEN_HISTORY.get(uid, set()))
+        
+        remaining.sort(key=seen_count)
+        selected += remaining[:needed]
 
-    # Mark as seen for both users
+    # Mark chosen questions as seen for both users in memory and database
     chosen_ids = [q["id"] for q in selected]
     if user_ids:
         for uid in user_ids:
-            record_user_seen(uid, chosen_ids)
+            if uid:
+                record_user_seen(uid, chosen_ids)
 
     return selected
 
