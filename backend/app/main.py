@@ -57,6 +57,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def root():
+    return {
+        "status": "online",
+        "service": "WouldYouMatch? API",
+        "version": "2.0.0",
+        "docs": "/docs"
+    }
+
 # ── Pydantic Request Schemas ──
 class GuestAuthRequest(BaseModel):
     device_fingerprint: Optional[str] = ""
